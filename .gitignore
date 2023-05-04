@@ -1,4 +1,4 @@
-*.env
+.env
 *client_secrets.json
 /not_for_github
 /Roboto
