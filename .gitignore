@@ -1,0 +1,7 @@
+*.env
+*client_secrets.json
+/not_for_github
+/Roboto
+/__pycache__
+/.vscode
+/venv
