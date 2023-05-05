@@ -15,7 +15,18 @@ PLAYHT_API_KEY = os.getenv('PLAYHT_API_KEY')
 PLAYHT_API_USER_ID = os.getenv('PLAYHT_API_USER_ID')
 
 
-def generate_ultra_track(body,voice="Larry", speed="0.85"):
+def generate_ultra_track(body, voice="Larry", speed="0.85"):
+    """
+    Generate an audio track using Play.ht API with the given text, voice, and speed.
+
+    Args:
+        body (str): The text content to be converted to audio.
+        voice (str, optional): The voice to be used for the audio. Defaults to "Larry".
+        speed (str, optional): The speed of the audio playback. Defaults to "0.85".
+
+    Returns:
+        str: The transcription ID of the generated audio track.
+    """
     url = "https://play.ht/api/v1/convert"
 
     payload = json.dumps({
@@ -37,6 +48,17 @@ def generate_ultra_track(body,voice="Larry", speed="0.85"):
     return json.loads(response.text)['transcriptionId']
 
 def download_file(file_url, file_name, directory):
+    """
+    Download a file from the specified URL and save it to the given directory with the given file name.
+
+    Args:
+        file_url (str): The URL of the file to download.
+        file_name (str): The name to save the downloaded file as.
+        directory (str): The directory to save the file in.
+
+    Returns:
+        None
+    """
     if not os.path.exists(directory):
         os.makedirs(directory)
 
@@ -49,7 +71,16 @@ def download_file(file_url, file_name, directory):
     local_filename, headers = urllib.request.urlretrieve(file_url, file_path)
 
 
-def ultra_play_ht_get_id(transaction_id:str, ):
+def ultra_play_ht_get_id(transaction_id: str):
+    """
+    Get the audio URL for the given transcription ID using Play.ht API.
+
+    Args:
+        transaction_id (str): The transcription ID to get the audio URL for.
+
+    Returns:
+        str: The audio URL of the generated audio track.
+    """
     url = f"https://play.ht/api/v1/articleStatus?transcriptionId={transaction_id}&ultra=true"
     payload = json.dumps({
     'transcriptionId': transaction_id,
@@ -67,7 +98,20 @@ def ultra_play_ht_get_id(transaction_id:str, ):
     return json.loads(response.text)['audioUrl'][0]
 
 
-def generate_track_on_machine(body,file_name,directory,voice="Larry", speed="0.85"):
+def generate_track_on_machine(body, file_name, directory, voice="Larry", speed="0.85"):
+    """
+    Generate an audio track on a local machine with the given text, voice, and speed.
+
+    Args:
+        body (str): The text content to be converted to audio.
+        file_name (str): The name to save the generated audio file as.
+        directory (str): The directory to save the audio file in.
+        voice (str, optional): The voice to be used for the audio. Defaults to "Larry".
+        speed (str, optional): The speed of the audio playback. Defaults to "0.85".
+
+    Returns:
+        None
+    """
     id = generate_ultra_track(body,voice,speed)
 
     audio_url = ultra_play_ht_get_id(id)

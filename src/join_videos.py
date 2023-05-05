@@ -1,8 +1,18 @@
 import argparse
 from moviepy.editor import VideoFileClip, concatenate_videoclips
+from typing import List
 
+def concatenate_videos(videos: List[str], output: str) -> None:
+    """
+    Concatenate a list of video files and save the resulting video to an output file.
 
-def concatenate_videos(videos, output):
+    Args:
+        videos (List[str]): A list of paths to the video files to be concatenated.
+        output (str): The path to the output file where the concatenated video will be saved.
+
+    Returns:
+        None
+    """
     # list of video clips
     video_clips = []
 

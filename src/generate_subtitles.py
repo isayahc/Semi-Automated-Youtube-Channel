@@ -3,12 +3,10 @@ from pathlib import Path
 import whisperx
 import whisper
 import pandas as pd
-import cv2
 from moviepy.video.tools.subtitles import SubtitlesClip
-from moviepy.editor import VideoFileClip, ColorClip, TextClip
+from moviepy.editor import VideoFileClip
 import argparse
-from typing import List, Dict, Union
-import re
+from typing import List, Dict, Union, Tuple
 
 
 def transcribe_and_align(input_path: Path, device: str = "cpu", model_type: str = "medium") -> dict:
@@ -30,56 +28,65 @@ def transcribe_and_align(input_path: Path, device: str = "cpu", model_type: str 
     result_aligned = whisperx.align(result["segments"], model_a, metadata, input_path, device)
     return result_aligned
 
-def alt_transcribe_and_align(input_path: Path, device: str = "cpu", model_type: str = "medium") -> dict:
-    """Transcribe and align audio file.
-
-    Args:
-        input_path (Path): Path to audio file.
-        device (str, optional): Device to use for transcription and alignment.
-            Defaults to "cpu".
-        model_type (str, optional): Type of model to use for transcription.
-            Defaults to "medium".
-
-    Returns:
-        dict: Aligned transcriptions.
-    """
-
-    model = whisper.load_model("medium.en")
-    result = model.transcribe(r"C:\Users\isaya\code_examples\Machine_Learning\wiki_data_set\reddit\post\story1\data_take_2.wav")
-    print(result["text"])
-    return result
 
 def segment_text_by_word_length(my_list: List[Dict[str, Union[str, float]]], word_length_max: int = 5) -> List[Dict[str, Union[str, float]]]:
-    # my_list = [...]  # your original List[dict]
+    """
+    Segments a list of dictionaries containing text and timestamps into groups of a specified maximum word length.
+    
+    Args:
+        my_list (List[Dict[str, Union[str, float]]]): A list of dictionaries containing 'text', 'start', and 'end' keys.
+        word_length_max (int, optional): The maximum number of words per segment. Defaults to 5.
 
-    result = []
-    temp = []
-    complete_segment = []
+    Returns:
+        List[Dict[str, Union[str, float]]]: A list of dictionaries containing the segmented text and corresponding start and end timestamps.
+    """
+    segmented_text = []
+    temp_segment = []
 
     for item in my_list:
-        temp.append(item)
-        if len(temp) == word_length_max:
-            result.append(temp)
-            temp = []
-    if temp:
-        result.append(temp)
+        temp_segment.append(item)
+        if len(temp_segment) == word_length_max:
+            segmented_text.append(temp_segment)
+            temp_segment = []
 
-    for res_i in result:
-        start_time = res_i[0]['start']
-        end_time = res_i[-1]['end']
-        dd = [i['text'] for i in res_i]
-        dd = " ".join(dd)
-        res_dict = {"text":dd, "start":start_time, "end":end_time}
-        complete_segment.append(res_dict)
-    return complete_segment
+    if temp_segment:
+        segmented_text.append(temp_segment)
 
-def get_video_size(filename):
+    complete_segments = []
+    for segment in segmented_text:
+        start_time = segment[0]['start']
+        end_time = segment[-1]['end']
+        text = " ".join(item['text'] for item in segment)
+        complete_segments.append({"text": text, "start": start_time, "end": end_time})
+
+    return complete_segments
+
+def get_video_size(filename: str) -> Tuple[int, int]:
+    """
+    Get the dimensions (width and height) of a video file.
+
+    Args:
+        filename (str): The path to the video file.
+
+    Returns:
+        Tuple[int, int]: A tuple containing the width and height of the video, in the format (width, height).
+    """
     video = VideoFileClip(filename)
     return (video.w, video.h)
 
-def add_subtitles_to_video(input_path: str, output_path: str, word_segments: list) -> None:
-    # Create a list of text clips for each segment of text
 
+def add_subtitles_to_video(input_path: str, output_path: str, word_segments: list) -> None:
+    """
+    Add subtitles to a video file based on word segments with start and end times.
+
+    Args:
+        input_path (str): The path to the input video file.
+        output_path (str): The path to the output video file with subtitles added.
+        word_segments (list): A list of dictionaries containing 'text', 'start', and 'end' keys for each word segment.
+
+    Returns:
+        None
+    """
     text_clip_data = {
         'start': [segment['start'] for segment in word_segments],
         'end': [segment['end'] for segment in word_segments],

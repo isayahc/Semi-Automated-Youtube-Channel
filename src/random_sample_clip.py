@@ -5,6 +5,19 @@ import argparse
 
 
 def create_clip_with_matching_audio(video_path: str, audio_path: str, output_path: str) -> None:
+    """
+    Create a video clip with the same duration as the provided audio file.
+    The video clip is extracted from the input video file and the audio is set to the provided audio file.
+    The resulting clip is saved to the output path.
+
+    Args:
+        video_path (str): The path to the input video file.
+        audio_path (str): The path to the input audio file.
+        output_path (str): The path to the output file where the resulting video clip will be saved.
+
+    Returns:
+        None
+    """
     # Load video and audio files
     video = VideoFileClip(video_path)
     audio = AudioFileClip(audio_path)
@@ -23,6 +36,7 @@ def create_clip_with_matching_audio(video_path: str, audio_path: str, output_pat
 
     # Save the clip
     clip.write_videofile(output_path, audio_codec="aac")
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Create a video clip with matching audio')
