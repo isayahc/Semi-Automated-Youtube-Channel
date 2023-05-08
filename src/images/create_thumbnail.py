@@ -9,7 +9,7 @@ def create_thumbnail(segmented_image: str,
                      default_font_location: str = "arial.ttf",
                      y_spacing: int = 1) -> Image.Image:
     """
-    Create a thumbnail image with a background, segmented image, and text.
+    Create a thumbnail image from a background, segmented image, and text.
 
     This function generates a thumbnail image by combining a provided segmented image with text
     drawn on the left side. The text_items parameter is a list of dictionaries, each containing
