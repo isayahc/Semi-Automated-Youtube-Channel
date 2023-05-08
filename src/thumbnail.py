@@ -108,7 +108,20 @@ def crop_transparent(image_path: str, output_path: str):
     # Save the cropped image
     image.save(output_path)
 
-def download_image(url, directory="."):
+import os
+import requests
+
+def download_image(url: str, directory: str = ".") -> str:
+    """
+    Download an image from a URL and save it to a directory.
+
+    Args:
+        url (str): The URL of the image to download.
+        directory (str): The directory to save the image in. Defaults to the current directory.
+
+    Returns:
+        str: The file path of the downloaded image if successful, else None.
+    """
     response = requests.get(url)
     if response.status_code == 200:
         filename = os.path.basename(url)
@@ -118,8 +131,18 @@ def download_image(url, directory="."):
         return filepath
     else:
         return None
+
     
-def convert_to_png(sample):
+def convert_to_png(sample:str) -> str:
+    """
+    Converts the input image file to PNG format if it is a JPEG file.
+
+    Args:
+        sample (str): The path to the input image file.
+
+    Returns:
+        str: The path to the output image file. If the input image file is already in PNG format, returns the original file path.
+    """
     img = Image.open(sample)
     if img.format == "JPEG":
         img = img.convert("RGBA")

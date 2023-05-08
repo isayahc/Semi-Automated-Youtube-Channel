@@ -1,26 +1,14 @@
 import praw
 import re
-
 import spacy
-
 from typing import List, Tuple
-
-from play_ht_api import generate_track_on_machine
-import whisper
-from typing import List
-
-from generate_subtitles import *
-
+from .play_ht_api import generate_track_on_machine
+from .generate_subtitles import *
 import csv
-
-from itertools import chain, zip_longest
-
 from pydub import AudioSegment
 from pathlib import Path
-# create a Reddit instance
 import os
-import concate_audio
-
+import src.concate_audio
 import natsort
 from dotenv import load_dotenv
 
@@ -39,25 +27,21 @@ def replace_caps_with_hyphens(sentence):
 
 def remove_parenthesis(text:str):
     # define the pattern to match
-    pattern = r'\(\{.*?\}\)'
-    pattern = r'\([^)]*\)'
-    # pattern to remove
     pattern = r'\(([^\s()]+)\)'
     # remove the tokens from the string using regular expressions
-    # text_without_tokens = re.sub(pattern, '', text)
     # remove any text enclosed in parentheses if it contains only one word
     text_without_single_word_parentheses = re.sub(pattern, lambda m: m.group(1) if ' ' in m.group(1) else '', text)
     # return text_without_tokens
     return text_without_single_word_parentheses
     
 
-def replace_hyphens_with_spaces(text):
-    return re.sub(r'(?<![A-Z])-(?![A-Z])', ' ', text)
+def replace_hyphens_with_single_space(text):
+    return re.sub(r'-\B|\B-', ' ', text)
 
 def add_spaces_around_hyphen(words):
     return re.sub(r'([a-zA-Z])-([a-zA-Z])', r'\1 - \2', words)
 
-def split_string_with_hyphen(input_str):
+def add_spaces_around_hyphens(input_str):
     # Replace all hyphens with a space followed by a hyphen followed by another space
     # Example: 'A-I-T-A' -> 'A - I - T - A'
     output_str = re.sub(r'-', ' - ', input_str)
@@ -79,23 +63,10 @@ def clean_up(text:str) -> str:
         text = text.replace("AITA", " am i the asshole  ")
 
 
-    # tokens = re.findall(r'\b\w+\b|[^\w\s]', text)
-
-    # Filter out tokens that contain non-alphanumeric items in the middle
-    # tokens = [token for token in tokens if re.match(r'^\W*([a-zA-Z0-9].*[a-zA-Z0-9]|\W)$', token)]
-
-    # Join the remaining tokens with dashes
-    # pattern = r'\b([A-Z]+\w*)\b'
-    # replacement = lambda match: '-'.join(c if c.isupper() else c.upper() for c in match.group(1))
-
-    # text = re.sub(pattern, replacement, text)
-    text = replace_hyphens_with_spaces(text)
+    text = replace_hyphens_with_single_space(text)
     text = replace_caps_with_hyphens(text)
-    text =  split_string_with_hyphen(text)
+    text =  add_spaces_around_hyphen(text)
 
-    # for word in text:
-    #     text = re.sub(r'(\w)\s*-\s*(\w)', r'\1 - \2', word)
-    #     # print(replaced_word)
 
     return text
 
@@ -262,7 +233,7 @@ def create_next_dir(input_directory):
 
     return new_dir
 
-def getSubComments(comment, allComments, verbose=True):
+def get_sub_comments(comment, allComments, verbose=True):
     allComments.append(comment)
     if not hasattr(comment, "replies"):
         replies = comment.comments()
@@ -271,14 +242,14 @@ def getSubComments(comment, allComments, verbose=True):
         else:
             replies = comment.replies
         for child in replies:
-            getSubComments(child, allComments, verbose=verbose)
+            get_sub_comments(child, allComments, verbose=verbose)
 
-def getAll(r, submissionId, verbose=True):
+def get_all(r, submissionId, verbose=True):
     submission = r.submission(submissionId)
     comments = submission.comments
     commentsList = []
     for comment in comments:
-        getSubComments(comment, commentsList, verbose=verbose)
+        get_sub_comments(comment, commentsList, verbose=verbose)
         return commentsList
 
 if __name__ == "__main__":
@@ -316,9 +287,9 @@ if __name__ == "__main__":
 
     # get the subreddit
     # subreddit = reddit.subreddit(sub)
-    # res = getAll(reddit, "6rjwo1", verbose=False) 
+    # res = get_all(reddit, "6rjwo1", verbose=False) 
 
-    # getAll(res,)
+    # get_all(res,)
 
 
     posts_dict = [{"title": clean_up(post.title), "body": clean_up(post.selftext)} for post in hot_posts]
@@ -343,10 +314,8 @@ if __name__ == "__main__":
         generate_track_on_machine(j,f"story_part_{num}.wav",directory,speed="0.815")
 
     complete_audio = os.path.join(directory,"complete.wav")
-    concate_audio.combine_audio_files_directory(directory,complete_audio)
+    src.concate_audio.concate_audio.combine_audio_files_directory(directory,complete_audio)
 
 
-
-    x=0
 
     # dirs = [d for d in os.listdir(r"C:\Users\isaya\code_examples\Machine_Learning\wiki_data_set\reddit\post\") if os.path.isdir(d) and re.match(dir_pattern, d) ]

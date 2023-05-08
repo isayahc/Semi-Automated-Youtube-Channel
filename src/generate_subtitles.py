@@ -61,6 +61,7 @@ def segment_text_by_word_length(my_list: List[Dict[str, Union[str, float]]], wor
 
     return complete_segments
 
+
 def get_video_size(filename: str) -> Tuple[int, int]:
     """
     Get the dimensions (width and height) of a video file.
