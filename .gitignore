@@ -1,7 +1,14 @@
+# Ignore files and directories for Git
 .env
-*client_secrets.json
+client_secrets.json
+/venv
+
+# Ignore directories not meant for GitHub
 /not_for_github
 /Roboto
-/__pycache__
+
+# Ignore Python cache directories
+**/__pycache__/
+
+# Ignore Visual Studio Code settings
 /.vscode
-/venv
