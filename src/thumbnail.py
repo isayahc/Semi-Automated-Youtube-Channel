@@ -1,7 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont
 from typing import List, Dict
 from rembg import remove
-
 import requests
 from PIL import Image
 import os
@@ -57,7 +56,19 @@ def segment_image(input_path:str,output_path:str):
     output = remove(input)
     output.save(output_path)
 
-def crop_png(input_data:str,output_data):
+
+def crop_png(input_data: str, output_data: str) -> None:
+    """
+    Crop a PNG image to the non-transparent area and save it to a file.
+
+    Args:
+        input_data (str): The path to the input image file.
+        output_data (str): The path to save the cropped image file.
+
+    Returns:
+        None
+    """
+    # Open the image
     image = Image.open(input_data)
 
     # Get the size of the image
@@ -74,6 +85,7 @@ def crop_png(input_data:str,output_data):
 
     # Save the cropped image
     cropped_image.save(output_data)
+
 
 def crop_transparent(image_path: str, output_path: str):
     """Crop a transparent image and save to a file.
@@ -108,8 +120,7 @@ def crop_transparent(image_path: str, output_path: str):
     # Save the cropped image
     image.save(output_path)
 
-import os
-import requests
+
 
 def download_image(url: str, directory: str = ".") -> str:
     """
@@ -189,6 +200,8 @@ if __name__ == '__main__':
     data = "https://images.girlslife.com/posts/009/9250/shutterstock_406983616.jpg"
     data = "https://www.aaa.com/AAA/common/AAR/images/deice1.png"
 
+    da
+
 
         
     sample = download_image(data)
@@ -216,8 +229,3 @@ if __name__ == '__main__':
 
     # create_thumbnail(ff,text,"fuck.png")
     # create_thumbnail(output_data,text,"fuck.png")
-
-
-
-
-    x=0

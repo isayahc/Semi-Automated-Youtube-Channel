@@ -19,11 +19,11 @@ REDDIT_CLIENT_ID = os.getenv('REDDIT_CLIENT_ID')
 REDDIT_CLIENT_SECRET = os.getenv('REDDIT_CLIENT_SECRET')
 
 
-
 def replace_caps_with_hyphens(sentence):
     pattern = r'\b([A-Z]+)\b'
     replacement = lambda match: '-'.join(list(match.group(1)))
     return re.sub(pattern, replacement, sentence)
+
 
 def remove_parenthesis(text:str):
     # define the pattern to match
@@ -36,20 +36,23 @@ def remove_parenthesis(text:str):
     
 
 def replace_hyphens_with_single_space(text):
+
     return re.sub(r'-\B|\B-', ' ', text)
 
 def add_spaces_around_hyphen(words):
+
     return re.sub(r'([a-zA-Z])-([a-zA-Z])', r'\1 - \2', words)
 
 def add_spaces_around_hyphens(input_str):
     # Replace all hyphens with a space followed by a hyphen followed by another space
     # Example: 'A-I-T-A' -> 'A - I - T - A'
+
     output_str = re.sub(r'-', ' - ', input_str)
     
     return output_str
 
 def clean_up(text:str) -> str:
-    # text = text.replace("\n"," ")
+    
     text = " ".join(text.split())
 
     text = remove_parenthesis(text)
