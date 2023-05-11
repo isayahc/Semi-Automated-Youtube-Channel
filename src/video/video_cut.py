@@ -37,7 +37,7 @@ def split_video(input_path: Path, output_path: Path, start_time: int, end_time: 
         video_clip.write_videofile(str(output_path), fps=24)
 
 
-if __name__ == "__main__":
+def main():
     # Parse the command-line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("input_path", type=Path, help="The path to the input video file")
@@ -52,3 +52,6 @@ if __name__ == "__main__":
     start_time = args.start_time
     end_time = args.end_time
     split_video(input_path, output_path, start_time, end_time)
+
+if __name__ == "__main__":
+    main()

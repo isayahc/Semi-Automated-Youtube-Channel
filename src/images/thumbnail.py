@@ -169,39 +169,12 @@ def convert_to_png(sample:str) -> str:
     return new_file_path
 
 
-    
-# Print function with comments
-# print(crop_transparent.__doc__)
-# print(crop_transparent)
-
-# # Print function without comments
-# import inspect
-
-# source = inspect.getsource(crop_transparent)
-# print(source)
-
-
-# text = [
-#     {"text": "Creating Youtube", "color" : (255,255,255), "spacingTop": 0, "size" : 50, "font": default_font_location},
-#     {"text": "Thumbnails", "color" : (255,0,0), "spacingTop": 50, "size" : 50, "font": default_font_location},
-#     {"text": "Automatically", "color" : (255,255,255), "spacingTop": 100, "size" : 50, "font": default_font_location}
-# ]
-
-# text = [
-#     {"text": "r/Petty revenge", "color" : (255,255,255), "spacingTop": 0, "size" : 50, "font": default_font_location},
-#     {"text": "Thumbnails", "color" : (255,0,0), "spacingTop": 60, "size" : 50, "font": default_font_location},
-#     {"text": "Automatically", "color" : (255,255,255), "spacingTop": 120, "size" : 50, "font": default_font_location}
-# ]
-
 if __name__ == '__main__':
 
     data = "https://th.bing.com/th/id/R.3d79e075f692870894fc41d6304eb4f2?rik=GfJgXZ5%2b5MJCVQ&riu=http%3a%2f%2fwww.pixelstalk.net%2fwp-content%2fuploads%2f2016%2f05%2fReally-Cool-Image.jpg"
     data = "https://www.lockheedmartin.com/content/dam/lockheed-martin/eo/photo/news/features/2021/ai/ai-small-1920.jpg.pc-adaptive.768.medium.jpeg"
     data = "https://images.girlslife.com/posts/009/9250/shutterstock_406983616.jpg"
     data = "https://www.aaa.com/AAA/common/AAR/images/deice1.png"
-
-    da
-
 
         
     sample = download_image(data)

@@ -1,0 +1,379 @@
+============================= test session starts =============================
+platform win32 -- Python 3.9.7, pytest-7.3.1, pluggy-1.0.0
+rootdir: C:\Users\isaya\code_examples\Machine_Learning\automated-youtube-channel
+plugins: anyio-3.6.2, hydra-core-1.3.1
+collected 3 items
+
+src\test\test_audio.py .FF                                               [100%]
+
+================================== FAILURES ===================================
+_____________________ test_combine_audio_files_directory ______________________
+
+audio_files_directory = 'C:\\Users\\isaya\\AppData\\Local\\Temp\\tmpmq94kd4o'
+
+    def test_combine_audio_files_directory(audio_files_directory):
+        output_file = os.path.join(audio_files_directory, 'combined_audio.wav')
+>       combined_audio = combine_audio_files_directory(audio_files_directory, output_file)
+
+src\test\test_audio.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\audio\concate_audio.py:27: in combine_audio_files_directory
+    audio = AudioSegment.from_file(audio_file)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = <class 'pydub.audio_segment.AudioSegment'>
+file = <_io.BufferedReader name='C:\\Users\\isaya\\AppData\\Local\\Temp\\tmpmq94kd4o\\file1.wav'>
+format = None, codec = None, parameters = None, start_second = None
+duration = None, kwargs = {}
+orig_file = 'C:\\Users\\isaya\\AppData\\Local\\Temp\\tmpmq94kd4o\\file1.wav'
+close_file = True
+is_format = <function AudioSegment.from_file.<locals>.is_format at 0x000002AFB6D09E50>
+
+    @classmethod
+    def from_file(cls, file, format=None, codec=None, parameters=None, start_second=None, duration=None, **kwargs):
+        orig_file = file
+        try:
+            filename = fsdecode(file)
+        except TypeError:
+            filename = None
+        file, close_file = _fd_or_path_or_tempfile(file, 'rb', tempfile=False)
+    
+        if format:
+            format = format.lower()
+            format = AUDIO_FILE_EXT_ALIASES.get(format, format)
+    
+        def is_format(f):
+            f = f.lower()
+            if format == f:
+                return True
+    
+            if filename:
+                return filename.lower().endswith(".{0}".format(f))
+    
+            return False
+    
+        if is_format("wav"):
+            try:
+                if start_second is None and duration is None:
+                    return cls._from_safe_wav(file)
+                elif start_second is not None and duration is None:
+                    return cls._from_safe_wav(file)[start_second*1000:]
+                elif start_second is None and duration is not None:
+                    return cls._from_safe_wav(file)[:duration*1000]
+                else:
+                    return cls._from_safe_wav(file)[start_second*1000:(start_second+duration)*1000]
+            except:
+                file.seek(0)
+        elif is_format("raw") or is_format("pcm"):
+            sample_width = kwargs['sample_width']
+            frame_rate = kwargs['frame_rate']
+            channels = kwargs['channels']
+            metadata = {
+                'sample_width': sample_width,
+                'frame_rate': frame_rate,
+                'channels': channels,
+                'frame_width': channels * sample_width
+            }
+            if start_second is None and duration is None:
+                return cls(data=file.read(), metadata=metadata)
+            elif start_second is not None and duration is None:
+                return cls(data=file.read(), metadata=metadata)[start_second*1000:]
+            elif start_second is None and duration is not None:
+                return cls(data=file.read(), metadata=metadata)[:duration*1000]
+            else:
+                return cls(data=file.read(), metadata=metadata)[start_second*1000:(start_second+duration)*1000]
+    
+        conversion_command = [cls.converter,
+                              '-y',  # always overwrite existing files
+                              ]
+    
+        # If format is not defined
+        # ffmpeg/avconv will detect it automatically
+        if format:
+            conversion_command += ["-f", format]
+    
+        if codec:
+            # force audio decoder
+            conversion_command += ["-acodec", codec]
+    
+        read_ahead_limit = kwargs.get('read_ahead_limit', -1)
+        if filename:
+            conversion_command += ["-i", filename]
+            stdin_parameter = None
+            stdin_data = None
+        else:
+            if cls.converter == 'ffmpeg':
+                conversion_command += ["-read_ahead_limit", str(read_ahead_limit),
+                                       "-i", "cache:pipe:0"]
+            else:
+                conversion_command += ["-i", "-"]
+            stdin_parameter = subprocess.PIPE
+            stdin_data = file.read()
+    
+        if codec:
+            info = None
+        else:
+            info = mediainfo_json(orig_file, read_ahead_limit=read_ahead_limit)
+        if info:
+            audio_streams = [x for x in info['streams']
+                             if x['codec_type'] == 'audio']
+            # This is a workaround for some ffprobe versions that always say
+            # that mp3/mp4/aac/webm/ogg files contain fltp samples
+            audio_codec = audio_streams[0].get('codec_name')
+            if (audio_streams[0].get('sample_fmt') == 'fltp' and
+                    audio_codec in ['mp3', 'mp4', 'aac', 'webm', 'ogg']):
+                bits_per_sample = 16
+            else:
+                bits_per_sample = audio_streams[0]['bits_per_sample']
+            if bits_per_sample == 8:
+                acodec = 'pcm_u8'
+            else:
+                acodec = 'pcm_s%dle' % bits_per_sample
+    
+            conversion_command += ["-acodec", acodec]
+    
+        conversion_command += [
+            "-vn",  # Drop any video streams if there are any
+            "-f", "wav"  # output options (filename last)
+        ]
+    
+        if start_second is not None:
+            conversion_command += ["-ss", str(start_second)]
+    
+        if duration is not None:
+            conversion_command += ["-t", str(duration)]
+    
+        conversion_command += ["-"]
+    
+        if parameters is not None:
+            # extend arguments with arbitrary set
+            conversion_command.extend(parameters)
+    
+        log_conversion(conversion_command)
+    
+        p = subprocess.Popen(conversion_command, stdin=stdin_parameter,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p_out, p_err = p.communicate(input=stdin_data)
+    
+        if p.returncode != 0 or len(p_out) == 0:
+            if close_file:
+                file.close()
+>           raise CouldntDecodeError(
+                "Decoding failed. ffmpeg returned error code: {0}\n\nOutput from ffmpeg/avlib:\n\n{1}".format(
+                    p.returncode, p_err.decode(errors='ignore') ))
+E           pydub.exceptions.CouldntDecodeError: Decoding failed. ffmpeg returned error code: 1
+E           
+E           Output from ffmpeg/avlib:
+E           
+E           ffmpeg version 4.2.3 Copyright (c) 2000-2020 the FFmpeg developers
+
+E             built with gcc 9.3.1 (GCC) 20200523
+
+E             configuration: --enable-gpl --enable-version3 --enable-sdl2 --enable-fontconfig --enable-gnutls --enable-iconv --enable-libass --enable-libdav1d --enable-libbluray --enable-libfreetype --enable-libmp3lame --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libopus --enable-libshine --enable-libsnappy --enable-libsoxr --enable-libtheora --enable-libtwolame --enable-libvpx --enable-libwavpack --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libzimg --enable-lzma --enable-zlib --enable-gmp --enable-libvidstab --enable-libvorbis --enable-libvo-amrwbenc --enable-libmysofa --enable-libspeex --enable-libxvid --enable-libaom --enable-libmfx --enable-amf --enable-ffnvcodec --enable-cuvid --enable-d3d11va --enable-nvenc --enable-nvdec --enable-dxva2 --enable-avisynth --enable-libopenmpt
+
+E             libavutil      56. 31.100 / 56. 31.100
+
+E             libavcodec     58. 54.100 / 58. 54.100
+
+E             libavformat    58. 29.100 / 58. 29.100
+
+E             libavdevice    58.  8.100 / 58.  8.100
+
+E             libavfilter     7. 57.100 /  7. 57.100
+
+E             libswscale      5.  5.100 /  5.  5.100
+
+E             libswresample   3.  5.100 /  3.  5.100
+
+E             libpostproc    55.  5.100 / 55.  5.100
+
+E           C:\Users\isaya\AppData\Local\Temp\tmpmq94kd4o\file1.wav: Invalid data found when processing input
+
+venv\lib\site-packages\pydub\audio_segment.py:773: CouldntDecodeError
+_________________ test_combine_audio_files_with_random_pause __________________
+
+audio_files_directory = 'C:\\Users\\isaya\\AppData\\Local\\Temp\\tmpf331enmr'
+
+    def test_combine_audio_files_with_random_pause(audio_files_directory):
+        output_file = os.path.join(audio_files_directory, 'combined_audio.wav')
+>       combined_audio = combine_audio_files_with_random_pause(audio_files_directory, output_file)
+
+src\test\test_audio.py:52: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\audio\concate_audio.py:44: in combine_audio_files_with_random_pause
+    combined_audio = AudioSegment.from_file(audio_files[0])
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = <class 'pydub.audio_segment.AudioSegment'>
+file = <_io.BufferedReader name='C:\\Users\\isaya\\AppData\\Local\\Temp\\tmpf331enmr\\file1.wav'>
+format = None, codec = None, parameters = None, start_second = None
+duration = None, kwargs = {}
+orig_file = 'C:\\Users\\isaya\\AppData\\Local\\Temp\\tmpf331enmr\\file1.wav'
+close_file = True
+is_format = <function AudioSegment.from_file.<locals>.is_format at 0x000002AFB8F92AF0>
+
+    @classmethod
+    def from_file(cls, file, format=None, codec=None, parameters=None, start_second=None, duration=None, **kwargs):
+        orig_file = file
+        try:
+            filename = fsdecode(file)
+        except TypeError:
+            filename = None
+        file, close_file = _fd_or_path_or_tempfile(file, 'rb', tempfile=False)
+    
+        if format:
+            format = format.lower()
+            format = AUDIO_FILE_EXT_ALIASES.get(format, format)
+    
+        def is_format(f):
+            f = f.lower()
+            if format == f:
+                return True
+    
+            if filename:
+                return filename.lower().endswith(".{0}".format(f))
+    
+            return False
+    
+        if is_format("wav"):
+            try:
+                if start_second is None and duration is None:
+                    return cls._from_safe_wav(file)
+                elif start_second is not None and duration is None:
+                    return cls._from_safe_wav(file)[start_second*1000:]
+                elif start_second is None and duration is not None:
+                    return cls._from_safe_wav(file)[:duration*1000]
+                else:
+                    return cls._from_safe_wav(file)[start_second*1000:(start_second+duration)*1000]
+            except:
+                file.seek(0)
+        elif is_format("raw") or is_format("pcm"):
+            sample_width = kwargs['sample_width']
+            frame_rate = kwargs['frame_rate']
+            channels = kwargs['channels']
+            metadata = {
+                'sample_width': sample_width,
+                'frame_rate': frame_rate,
+                'channels': channels,
+                'frame_width': channels * sample_width
+            }
+            if start_second is None and duration is None:
+                return cls(data=file.read(), metadata=metadata)
+            elif start_second is not None and duration is None:
+                return cls(data=file.read(), metadata=metadata)[start_second*1000:]
+            elif start_second is None and duration is not None:
+                return cls(data=file.read(), metadata=metadata)[:duration*1000]
+            else:
+                return cls(data=file.read(), metadata=metadata)[start_second*1000:(start_second+duration)*1000]
+    
+        conversion_command = [cls.converter,
+                              '-y',  # always overwrite existing files
+                              ]
+    
+        # If format is not defined
+        # ffmpeg/avconv will detect it automatically
+        if format:
+            conversion_command += ["-f", format]
+    
+        if codec:
+            # force audio decoder
+            conversion_command += ["-acodec", codec]
+    
+        read_ahead_limit = kwargs.get('read_ahead_limit', -1)
+        if filename:
+            conversion_command += ["-i", filename]
+            stdin_parameter = None
+            stdin_data = None
+        else:
+            if cls.converter == 'ffmpeg':
+                conversion_command += ["-read_ahead_limit", str(read_ahead_limit),
+                                       "-i", "cache:pipe:0"]
+            else:
+                conversion_command += ["-i", "-"]
+            stdin_parameter = subprocess.PIPE
+            stdin_data = file.read()
+    
+        if codec:
+            info = None
+        else:
+            info = mediainfo_json(orig_file, read_ahead_limit=read_ahead_limit)
+        if info:
+            audio_streams = [x for x in info['streams']
+                             if x['codec_type'] == 'audio']
+            # This is a workaround for some ffprobe versions that always say
+            # that mp3/mp4/aac/webm/ogg files contain fltp samples
+            audio_codec = audio_streams[0].get('codec_name')
+            if (audio_streams[0].get('sample_fmt') == 'fltp' and
+                    audio_codec in ['mp3', 'mp4', 'aac', 'webm', 'ogg']):
+                bits_per_sample = 16
+            else:
+                bits_per_sample = audio_streams[0]['bits_per_sample']
+            if bits_per_sample == 8:
+                acodec = 'pcm_u8'
+            else:
+                acodec = 'pcm_s%dle' % bits_per_sample
+    
+            conversion_command += ["-acodec", acodec]
+    
+        conversion_command += [
+            "-vn",  # Drop any video streams if there are any
+            "-f", "wav"  # output options (filename last)
+        ]
+    
+        if start_second is not None:
+            conversion_command += ["-ss", str(start_second)]
+    
+        if duration is not None:
+            conversion_command += ["-t", str(duration)]
+    
+        conversion_command += ["-"]
+    
+        if parameters is not None:
+            # extend arguments with arbitrary set
+            conversion_command.extend(parameters)
+    
+        log_conversion(conversion_command)
+    
+        p = subprocess.Popen(conversion_command, stdin=stdin_parameter,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p_out, p_err = p.communicate(input=stdin_data)
+    
+        if p.returncode != 0 or len(p_out) == 0:
+            if close_file:
+                file.close()
+>           raise CouldntDecodeError(
+                "Decoding failed. ffmpeg returned error code: {0}\n\nOutput from ffmpeg/avlib:\n\n{1}".format(
+                    p.returncode, p_err.decode(errors='ignore') ))
+E           pydub.exceptions.CouldntDecodeError: Decoding failed. ffmpeg returned error code: 1
+E           
+E           Output from ffmpeg/avlib:
+E           
+E           ffmpeg version 4.2.3 Copyright (c) 2000-2020 the FFmpeg developers
+
+E             built with gcc 9.3.1 (GCC) 20200523
+
+E             configuration: --enable-gpl --enable-version3 --enable-sdl2 --enable-fontconfig --enable-gnutls --enable-iconv --enable-libass --enable-libdav1d --enable-libbluray --enable-libfreetype --enable-libmp3lame --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libopus --enable-libshine --enable-libsnappy --enable-libsoxr --enable-libtheora --enable-libtwolame --enable-libvpx --enable-libwavpack --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libzimg --enable-lzma --enable-zlib --enable-gmp --enable-libvidstab --enable-libvorbis --enable-libvo-amrwbenc --enable-libmysofa --enable-libspeex --enable-libxvid --enable-libaom --enable-libmfx --enable-amf --enable-ffnvcodec --enable-cuvid --enable-d3d11va --enable-nvenc --enable-nvdec --enable-dxva2 --enable-avisynth --enable-libopenmpt
+
+E             libavutil      56. 31.100 / 56. 31.100
+
+E             libavcodec     58. 54.100 / 58. 54.100
+
+E             libavformat    58. 29.100 / 58. 29.100
+
+E             libavdevice    58.  8.100 / 58.  8.100
+
+E             libavfilter     7. 57.100 /  7. 57.100
+
+E             libswscale      5.  5.100 /  5.  5.100
+
+E             libswresample   3.  5.100 /  3.  5.100
+
+E             libpostproc    55.  5.100 / 55.  5.100
+
+E           C:\Users\isaya\AppData\Local\Temp\tmpf331enmr\file1.wav: Invalid data found when processing input
+
+venv\lib\site-packages\pydub\audio_segment.py:773: CouldntDecodeError
+=========================== short test summary info ===========================
+FAILED src/test/test_audio.py::test_combine_audio_files_directory - pydub.exc...
+FAILED src/test/test_audio.py::test_combine_audio_files_with_random_pause - p...
+========================= 2 failed, 1 passed in 0.73s =========================

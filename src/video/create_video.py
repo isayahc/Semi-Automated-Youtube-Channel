@@ -26,7 +26,8 @@ def create_video(input_img: str, input_audio: str, output_file: str, output_exte
     print(command)
     subprocess.run(command)
 
-if __name__ == "__main__":
+
+def main():
     parser = argparse.ArgumentParser(description="Create a video using an input image and audio.")
     parser.add_argument("input_img", help="Path to the input image")
     parser.add_argument("input_audio", help="Path to the input audio")
@@ -35,3 +36,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     create_video(args.input_img, args.input_audio, args.output_file, args.output_extension)
+
+if __name__ == "__main__":
+    main()
