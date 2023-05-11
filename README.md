@@ -6,7 +6,7 @@ Produce a semi-Automated Youtube channel
 
 ## Current Features
 
-- utilizes Reddit's API to descover bosies of text
+- utilizes Reddit's API to descover bodies of text
 - uses a text-to-speech api to play over a video
 - assuming the inputted video is longer than the speech, it will take a random snippet from the video that has the same length of the text-to-speech .wav file
 

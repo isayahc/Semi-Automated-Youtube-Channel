@@ -1,17 +1,12 @@
 import os
-import re
 from typing import List, Tuple
 from dotenv import load_dotenv
 from pathlib import Path
 
 import praw
-import spacy
-import natsort
 
-import src.audio.concate_audio
 from .play_ht_api import generate_track_on_machine
 from .generate_subtitles import *
-
 
 
 # Load the .env file
@@ -19,61 +14,6 @@ load_dotenv()
 
 REDDIT_CLIENT_ID = os.getenv('REDDIT_CLIENT_ID')
 REDDIT_CLIENT_SECRET = os.getenv('REDDIT_CLIENT_SECRET')
-
-
-def replace_caps_with_hyphens(sentence):
-    pattern = r'\b([A-Z]+)\b'
-    replacement = lambda match: '-'.join(list(match.group(1)))
-    return re.sub(pattern, replacement, sentence)
-
-
-def remove_parenthesis(text:str):
-    # define the pattern to match
-    pattern = r'\(([^\s()]+)\)'
-    # remove the tokens from the string using regular expressions
-    # remove any text enclosed in parentheses if it contains only one word
-    text_without_single_word_parentheses = re.sub(pattern, lambda m: m.group(1) if ' ' in m.group(1) else '', text)
-    # return text_without_tokens
-    return text_without_single_word_parentheses
-    
-
-def replace_hyphens_with_single_space(text):
-
-    return re.sub(r'-\B|\B-', ' ', text)
-
-def add_spaces_around_hyphen(words):
-
-    return re.sub(r'([a-zA-Z])-([a-zA-Z])', r'\1 - \2', words)
-
-def add_spaces_around_hyphens(input_str):
-    # Replace all hyphens with a space followed by a hyphen followed by another space
-    # Example: 'A-I-T-A' -> 'A - I - T - A'
-
-    output_str = re.sub(r'-', ' - ', input_str)
-    
-    return output_str
-
-def clean_up(text:str) -> str:
-    
-    text = " ".join(text.split())
-
-    text = remove_parenthesis(text)
-
-    text = text.replace("\\"," slash ")
-
-    if "r/" in text:
-        text = text.replace("r/", " R slash ")
-
-    if "AITA" in text:
-        text = text.replace("AITA", " am i the asshole  ")
-
-
-    text = replace_hyphens_with_single_space(text)
-    text = replace_caps_with_hyphens(text)
-    text =  add_spaces_around_hyphen(text)
-
-
-    return text
 
 
 def get_subreddit(sub:str):
@@ -86,37 +26,6 @@ def get_subreddit(sub:str):
     return subreddit
 
 
-def join_sentences(sentences: List[str]) -> List[str]:
-    '''splits body of text such that it never surpases maximum token 250'''
-    result = []
-    current_sentence = ""
-    current_word_count = 0
-    
-    for sentence in sentences:
-        # split sentence into words and add to current word count
-        words = sentence.split()
-        current_word_count += len(words)
-        
-        # if adding the current sentence would result in too many words, add the current sentence to the result
-        if current_word_count > 249:
-            result.append(current_sentence)
-            current_sentence = ""
-            current_word_count = 0
-        
-        # add current sentence and a space to the result
-        if len(current_sentence) > 0:
-            current_sentence += " "
-        
-        # add current sentence to the result
-        current_sentence += sentence
-    
-    # add final sentence to the result
-    result.append(current_sentence)
-    
-    return result
-
-
-
 def turn_post_into_script(reddit_post,reddit_title):
     ending = " . Ever been in a situation like this? Leave it in the comment section. Like and subscribe if you enjoyed this video and want to see more like them. Thank you for watching my video. I hope you enjoyed it, and please have a wonderful day."
     opening = f"Today's story from reddit - - ... {reddit_title} ... let's get into the story ... "
@@ -124,54 +33,6 @@ def turn_post_into_script(reddit_post,reddit_title):
     total_script = opening + reddit_post + ending
     return total_script
 
-
-
-def filter_text_by_list(text_list: List[Dict[str, Union[str, float]]], word_list: List[str]) -> List[Dict[str, Union[str, float]]]:
-    '''returns segments of swear words'''
-    filtered_list = []
-    for item in text_list:
-        # Remove all non-alphanumeric characters from the item's text
-        cleaned_text = re.sub(r'[^a-zA-Z\d\s]', '', item['text'])
-        if cleaned_text.lower() in word_list:
-            filtered_list.append(item)
-    return filtered_list
-
-
-def create_next_dir(input_directory):
-    dir_pattern = r'story_\d+'  # pattern to match directories
-    dirs = [d for d in os.listdir(input_directory) if re.match(dir_pattern, d)]  # get list of directories matching pattern
-
-    dirs = sorted_dirs = natsort.natsorted(dirs)
-    if dirs:  # if there are matching directories
-        last_dir = max(dirs)  # get the highest numbered directory
-        next_num = int(re.search(r'\d+', last_dir).group()) + 1  # extract the number from the directory name and add 1
-        new_dir = f'story_{next_num}'  # create the new directory name
-    else:  # if there are no matching directories
-        new_dir = 'story_1'  # start with directory number 1
-
-    new_dir = os.path.join(input_directory,new_dir)
-
-    os.makedirs(new_dir)  # create the new directory
-
-    return new_dir
-
-def create_next_dir(input_directory):
-    dir_pattern = r'story_\d+'  # pattern to match directories
-    dirs = [d for d in os.listdir(input_directory) if re.match(dir_pattern, d)]  # get list of directories matching pattern
-    dirs = natsort.natsorted(dirs)  # sort the directories in natural order
-
-    if dirs:  # if there are matching directories
-        last_dir = dirs[-1]  # get the last directory in the sorted list
-        next_num = int(re.search(r'\d+', last_dir).group()) + 1  # extract the number from the directory name and add 1
-        new_dir = f'story_{next_num}'  # create the new directory name
-    else:  # if there are no matching directories
-        new_dir = 'story_1'  # start with directory number 1
-
-    new_dir = os.path.join(input_directory, new_dir)
-
-    os.makedirs(new_dir)  # create the new directory
-
-    return new_dir
 
 def get_sub_comments(comment, allComments, verbose=True):
     allComments.append(comment)
@@ -192,54 +53,3 @@ def get_all(r, submissionId, verbose=True):
         get_sub_comments(comment, commentsList, verbose=verbose)
         return commentsList
 
-if __name__ == "__main__":
-
-    input_data = r"C:\Users\isaya\code_examples\Machine_Learning\wiki_data_set\data_data_data_data_youtube.mp4"
-    input_data = r"C:\Users\isaya\code_examples\Machine_Learning\wiki_data_set\big_swears.wav"
-
-    sample = r"C:\Users\isaya\code_examples\Machine_Learning\wiki_data_set\reddit\post"
-    
-
-
-    # swear_bank = [*get_swear_bank().keys()]
-    # masked_script = mask_swear_segments(input_data,swear_bank) 
-
-    # make_family_friendly(input_data,swear_bank,"output0.wav")
-
- 
-    # posts = get_subreddit('pettyrevenge')
-
-    posts = get_subreddit('askreddit')
-
-    
-
-    hot_posts = posts.top("all", limit=3)
-    hot_posts = [*hot_posts]
-
-    posts_dict = [{"title": clean_up(post.title), "body": clean_up(post.selftext)} for post in hot_posts]
-
-    # sample code
-    first_story = posts_dict[-1]
-
-    story = temp = turn_post_into_script(first_story['body'],first_story['title'])
-
-
-    nlp = spacy.load("en_core_web_md")
-    doc = nlp(story)
-
-    doc_sents = [*doc.sents]
-
-    doc_sents_text = data = [i.text for i in doc.sents]
-    # data = join_sentences(doc_sents_text)
-
-    directory = create_next_dir(sample)
-
-    for num,j in enumerate(data):
-        generate_track_on_machine(j,f"story_part_{num}.wav",directory,speed="0.815")
-
-    complete_audio = os.path.join(directory,"complete.wav")
-    src.concate_audio.concate_audio.combine_audio_files_directory(directory,complete_audio)
-
-
-
-    # dirs = [d for d in os.listdir(r"C:\Users\isaya\code_examples\Machine_Learning\wiki_data_set\reddit\post\") if os.path.isdir(d) and re.match(dir_pattern, d) ]
