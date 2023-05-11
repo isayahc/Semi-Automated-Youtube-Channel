@@ -2,6 +2,8 @@ import os
 import tempfile
 import pytest
 from pydub import AudioSegment
+from pyttsx3 import init
+import shutil
 from ..audio.concate_audio import (
     get_sorted_audio_files,
     combine_audio_files_directory,
@@ -13,14 +15,12 @@ from ..audio.concate_audio import (
 def audio_files_directory():
     # Create a temporary directory for the audio files
     temp_dir = tempfile.mkdtemp()
-    
+
     # Create temporary audio files in the directory
     audio_files = ['file1.wav', 'file2.wav', 'file3.wav']
     for audio_file in audio_files:
         file_path = os.path.join(temp_dir, audio_file)
-        with open(file_path, 'w') as f:
-            # Write some content to the audio file (not necessary for the test)
-            f.write('Audio content')
+        generate_audio("Sample audio", file_path)  # Generate sample audio using TTS
 
     yield temp_dir
 
@@ -28,8 +28,12 @@ def audio_files_directory():
     for audio_file in audio_files:
         file_path = os.path.join(temp_dir, audio_file)
         os.remove(file_path)
-    os.rmdir(temp_dir)
+    shutil.rmtree(temp_dir, ignore_errors=True)
 
+def generate_audio(text, output_file):
+    engine = init()
+    engine.save_to_file(text, output_file)
+    engine.runAndWait()
 
 def test_get_sorted_audio_files(audio_files_directory):
     expected_files = [
