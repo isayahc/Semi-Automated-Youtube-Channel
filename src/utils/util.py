@@ -1,14 +1,16 @@
+import os
+import subprocess
+from typing import List
+
+from datetime import timedelta
+from pathlib import Path
+import argparse
+
+import reddit_api
 from audio.concate_audio import combine_audio_files
+import audio.audio_utils
 from video.random_sample_clip import create_clip_with_matching_audio
 from generate_subtitles import add_subtitles_to_video, transcribe_and_align, segment_text_by_word_length
-import argparse
-import subprocess
-import reddit_api
-from typing import List
-from pathlib import Path
-from datetime import timedelta
-import os
-from typing import List
 
 def combine_audio_and_video(video_path: str, audio_path: str, output_path: str) -> None:
     """
@@ -94,10 +96,8 @@ def generate_video(uncensored_audio_file: str, source_video: str, swear_bank: Li
 
     add_subtitles_to_video(str(video_clip),out_put_location,n_segment)
 
-
-    
 if __name__ == "__main__":
-    swear_bank = [*reddit_api.get_swear_bank().keys()]
+    swear_bank = [*audio.audio_utils.get_swear_bank().keys()]
     parser = argparse.ArgumentParser()
     parser.add_argument("uncensored_audio_file", type=str, help="Path to the uncensored audio file")
     parser.add_argument("source_video", type=str, help="Path to the source video file")
