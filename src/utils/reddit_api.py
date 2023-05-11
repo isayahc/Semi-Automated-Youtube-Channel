@@ -1,16 +1,18 @@
-import praw
+import os
 import re
-import spacy
 from typing import List, Tuple
+from dotenv import load_dotenv
+from pathlib import Path
+
+import praw
+import spacy
+import natsort
+
+import src.audio.concate_audio
 from .play_ht_api import generate_track_on_machine
 from .generate_subtitles import *
-import csv
-from pydub import AudioSegment
-from pathlib import Path
-import os
-import src.concate_audio
-import natsort
-from dotenv import load_dotenv
+
+
 
 # Load the .env file
 load_dotenv()
@@ -123,31 +125,6 @@ def turn_post_into_script(reddit_post,reddit_title):
     return total_script
 
 
-def get_swear_bank():
-        with open(r'C:\Users\isaya\code_examples\Machine_Learning\wiki_data_set\reddit\censor.csv', 'r') as f:
-            reader = csv.reader(f)
-            # create a dictionary with the first column as the keys and the second column as the values
-            links_dict = {rows[0]: rows[1] for rows in reader}
-        return links_dict
-
-
-def masked_words(words_to_mask:List[str], string_to_mask:str):
-    '''mask sear words'''
-    for word in words_to_mask:
-        pattern = r"\b{}\b".format(word)  # Create a regex pattern for the word
-        # Replace the word with asterisks, leaving the first and last character unchanged
-        string_to_mask = re.sub(pattern, lambda match: match.group(0)[0] + "*"*(len(match.group(0))-2) + match.group(0)[-1], string_to_mask, flags=re.IGNORECASE)
-    return string_to_mask
-
-
-def remove_swears(audio_script:str) ->str:
-    links_dict = get_swear_bank()
-
-    for word, replacement in links_dict.items():
-        audio_script = audio_script.replace(word, replacement)
-
-    return audio_script
-
 
 def filter_text_by_list(text_list: List[Dict[str, Union[str, float]]], word_list: List[str]) -> List[Dict[str, Union[str, float]]]:
     '''returns segments of swear words'''
@@ -159,46 +136,6 @@ def filter_text_by_list(text_list: List[Dict[str, Union[str, float]]], word_list
             filtered_list.append(item)
     return filtered_list
 
-
-def silence_segments(input_file, output_file, segments):
-    '''silences all selected segments'''
-    # Load audio file
-    audio = AudioSegment.from_file(input_file)
-
-    # Loop over the list of segments
-    for segment in segments:
-        # Calculate the start and end times in milliseconds
-        start_ms = segment['start'] * 1000
-        end_ms = segment['end'] * 1000
-
-        # Create a silent audio segment with the same duration as the specified segment
-        duration = end_ms - start_ms
-        silent_segment = AudioSegment.silent(duration=duration)
-
-        # Replace the segment with the silent audio
-        audio = audio[:start_ms] + silent_segment + audio[end_ms:]
-
-    # Export the modified audio to a file
-    audio.export(output_file, format="wav")
-
-
-def mask_swear_segments(word_list: List[str], x_word_segments: List[Dict[str, Union[str, float]]]) -> List[Dict[str, Union[str, float]]]:
-    x_word_segments_copy = []
-    for i in x_word_segments:
-        segment_copy = i.copy()
-        segment_copy['text'] = masked_words(word_list, i['text'])
-        x_word_segments_copy.append(segment_copy)
-    return x_word_segments_copy
-
-
-
-def make_family_friendly(input_data:str,swear_bank:List[str],output_data:str="output0.wav"):
-    x = transcribe_and_align(input_data)
-    x_word_segments = x['word_segments']
-
-    swear_word_segements = filter_text_by_list(x_word_segments,swear_bank)
-
-    silence_segments(input_data, output_data, swear_word_segements)
 
 def create_next_dir(input_directory):
     dir_pattern = r'story_\d+'  # pattern to match directories
@@ -278,22 +215,6 @@ if __name__ == "__main__":
 
     hot_posts = posts.top("all", limit=3)
     hot_posts = [*hot_posts]
-
-
-    reddit = praw.Reddit(client_id=REDDIT_CLIENT_ID,         
-    client_secret=REDDIT_CLIENT_SECRET,      
-    user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)")
-
-    url = "https://www.reddit.com/r/AskReddit/comments/11h681p/whats_an_unwritten_rule_about_the_road_that_new/"
-    submission = reddit.submission(url=url)
-    comments = submission.comments.list()
-
-    # get the subreddit
-    # subreddit = reddit.subreddit(sub)
-    # res = get_all(reddit, "6rjwo1", verbose=False) 
-
-    # get_all(res,)
-
 
     posts_dict = [{"title": clean_up(post.title), "body": clean_up(post.selftext)} for post in hot_posts]
 

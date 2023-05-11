@@ -1,5 +1,5 @@
-from concate_audio import combine_audio_files
-from random_sample_clip import create_clip_with_matching_audio
+from audio.concate_audio import combine_audio_files
+from video.random_sample_clip import create_clip_with_matching_audio
 from generate_subtitles import add_subtitles_to_video, transcribe_and_align, segment_text_by_word_length
 import argparse
 import subprocess
