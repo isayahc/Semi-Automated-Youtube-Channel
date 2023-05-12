@@ -107,8 +107,8 @@ def create_next_dir(input_directory:str) ->str:
     current_directory = Path(os.getcwd())
     if not is_absolute:
         directory_path = Path.joinpath(current_directory, input_directory)
-        if directory_path:
-            dirs = [d for d in os.listdir(input_directory) if re.match(dir_pattern, d)]
+        if directory_path.exists():
+            dirs = [d for d in os.listdir(directory_path) if re.match(dir_pattern, d)]
             # get the last directory in the sorted list
             last_dir = dirs[-1]
             # extract the number from the directory name and add 1
