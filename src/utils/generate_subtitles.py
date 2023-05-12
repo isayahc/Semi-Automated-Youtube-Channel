@@ -8,7 +8,7 @@ from moviepy.editor import VideoFileClip
 import argparse
 from typing import List, Dict, Union, Tuple
 
-from video.utils import get_video_size
+from src.video.utils import get_video_size
 
 
 def transcribe_and_align(input_path: Path, device: str = "cpu", model_type: str = "medium") -> dict:

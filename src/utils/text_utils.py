@@ -2,13 +2,9 @@ import os
 import re
 from typing import List, Tuple
 
-import spacy
-import natsort
-
 import src.audio.concate_audio
 from .play_ht_api import generate_track_on_machine
 from .generate_subtitles import *
-
 
 
 def replace_caps_with_hyphens(sentence):
@@ -116,40 +112,3 @@ def filter_text_by_list(text_list: List[Dict[str, Union[str, float]]], word_list
         if cleaned_text.lower() in word_list:
             filtered_list.append(item)
     return filtered_list
-
-
-def create_next_dir(input_directory):
-    dir_pattern = r'story_\d+'  # pattern to match directories
-    dirs = [d for d in os.listdir(input_directory) if re.match(dir_pattern, d)]  # get list of directories matching pattern
-
-    dirs = sorted_dirs = natsort.natsorted(dirs)
-    if dirs:  # if there are matching directories
-        last_dir = max(dirs)  # get the highest numbered directory
-        next_num = int(re.search(r'\d+', last_dir).group()) + 1  # extract the number from the directory name and add 1
-        new_dir = f'story_{next_num}'  # create the new directory name
-    else:  # if there are no matching directories
-        new_dir = 'story_1'  # start with directory number 1
-
-    new_dir = os.path.join(input_directory,new_dir)
-
-    os.makedirs(new_dir)  # create the new directory
-
-    return new_dir
-
-def create_next_dir(input_directory):
-    dir_pattern = r'story_\d+'  # pattern to match directories
-    dirs = [d for d in os.listdir(input_directory) if re.match(dir_pattern, d)]  # get list of directories matching pattern
-    dirs = natsort.natsorted(dirs)  # sort the directories in natural order
-
-    if dirs:  # if there are matching directories
-        last_dir = dirs[-1]  # get the last directory in the sorted list
-        next_num = int(re.search(r'\d+', last_dir).group()) + 1  # extract the number from the directory name and add 1
-        new_dir = f'story_{next_num}'  # create the new directory name
-    else:  # if there are no matching directories
-        new_dir = 'story_1'  # start with directory number 1
-
-    new_dir = os.path.join(input_directory, new_dir)
-
-    os.makedirs(new_dir)  # create the new directory
-
-    return new_dir

@@ -4,34 +4,44 @@ import spacy
 
 import src.utils.play_ht_api
 import src.utils.reddit_api
+import src.utils.text_utils
+import src.utils.utils
+
 
 if __name__ == '__main__':
 
-    sample = r"\reddit\post"
-    posts = src.utils.reddit_api.get_subreddit('dndstories')
-    hot_posts = posts.top("all", limit=3)
-    hot_posts = [*hot_posts]
+    #location of where the .wav files will be stored
+    string_audio_file_location = r"\reddit\post"
 
-    posts_dict_0 = [{"title": post.title, "body": post.selftext} for post in hot_posts]
-    posts_dict = [{"title": src.utils.reddit_api.clean_up(post.title), "body": src.utils.reddit_api.clean_up(post.selftext)} for post in hot_posts]
+    #gets the data from a selected subreddit
+    reddit_subreddit = src.utils.reddit_api.get_subreddit('dndstories')
 
+    #queries the 3 post popular post of a given subreddit
+    hot_subreddit_posts = reddit_subreddit.top("all", limit=3)
+    hot_subreddit_posts = [*hot_subreddit_posts]
 
+    posts_dict = [{"title": src.utils.text_utils.clean_up(post.title), "body": src.utils.text_utils.clean_up(post.selftext)} for post in hot_subreddit_posts]
+
+    # chooses the first reddit story in the query
     first_story = posts_dict[-1]
 
-    story = temp = src.utils.reddit_api.turn_post_into_script(first_story['body'],first_story['title'])
+    #turns the selected reddit story into a simple youtube script
+    script_first_story = src.utils.reddit_api.turn_post_into_script(first_story['body'],first_story['title'])
 
-
+    #initializes the spacy model
     nlp = spacy.load("en_core_web_md")
-    doc = nlp(story)
+    doc = nlp(script_first_story)
 
+    #seperates the reddit story into individual stories
     doc_sents = [*doc.sents]
 
     doc_sents_text = data = [i.text for i in doc.sents]
-    # data = join_sentences(doc_sents_text)
 
-    directory = src.utils.reddit_api.create_next_dir(sample)
+    # will create a directory in a given location story_n
+    # where n is the number of directories with the name story
+    directory = src.utils.utils.create_next_dir(string_audio_file_location)
 
-    for num,j in enumerate(data):
+    for num,j in enumerate(doc_sents_text):
         src.utils.play_ht_api.generate_track_on_machine(j,f"story_part_{num}.wav",directory,speed="0.815")
 
     complete_audio = os.path.join(directory,"complete.wav")

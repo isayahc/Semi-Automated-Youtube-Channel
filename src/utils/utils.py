@@ -1,12 +1,14 @@
 import os
 import subprocess
+import re
 from typing import List
 
 from datetime import timedelta
 from pathlib import Path
 import argparse
+import natsort
 
-import reddit_api
+
 from audio.concate_audio import combine_audio_files
 import audio.audio_utils
 from video.random_sample_clip import create_clip_with_matching_audio
@@ -96,6 +98,23 @@ def generate_video(uncensored_audio_file: str, source_video: str, swear_bank: Li
 
     add_subtitles_to_video(str(video_clip),out_put_location,n_segment)
 
+def create_next_dir(input_directory):
+    dir_pattern = r'story_\d+'  # pattern to match directories
+    dirs = [d for d in os.listdir(input_directory) if re.match(dir_pattern, d)]  # get list of directories matching pattern
+    dirs = natsort.natsorted(dirs)  # sort the directories in natural order
+
+    if dirs:  # if there are matching directories
+        last_dir = dirs[-1]  # get the last directory in the sorted list
+        next_num = int(re.search(r'\d+', last_dir).group()) + 1  # extract the number from the directory name and add 1
+        new_dir = f'story_{next_num}'  # create the new directory name
+    else:  # if there are no matching directories
+        new_dir = 'story_1'  # start with directory number 1
+
+    new_dir = os.path.join(input_directory, new_dir)
+
+    os.makedirs(new_dir)  # create the new directory
+
+    return new_dir
 if __name__ == "__main__":
     swear_bank = [*audio.audio_utils.get_swear_bank().keys()]
     parser = argparse.ArgumentParser()
