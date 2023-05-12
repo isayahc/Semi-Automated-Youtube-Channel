@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import spacy
 
@@ -7,11 +8,15 @@ import src.utils.reddit_api
 import src.utils.text_utils
 import src.utils.utils
 
+from elevenlabs import set_api_key, generate, save
+
+ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
+set_api_key(ELEVENLABS_API_KEY)
 
 if __name__ == '__main__':
 
     #location of where the .wav files will be stored
-    string_audio_file_location = r"\reddit\post"
+    string_audio_file_location = os.path.join("reddit","post")
 
     #gets the data from a selected subreddit
     reddit_subreddit = src.utils.reddit_api.get_subreddit('dndstories')
@@ -26,7 +31,10 @@ if __name__ == '__main__':
     first_story = posts_dict[-1]
 
     #turns the selected reddit story into a simple youtube script
-    script_first_story = src.utils.reddit_api.turn_post_into_script(first_story['body'],first_story['title'])
+    script_first_story = src.utils.reddit_api.turn_post_into_script(
+        first_story['body'],
+        first_story['title']
+        )
 
     #initializes the spacy model
     nlp = spacy.load("en_core_web_md")
@@ -41,8 +49,23 @@ if __name__ == '__main__':
     # where n is the number of directories with the name story
     directory = src.utils.utils.create_next_dir(string_audio_file_location)
 
-    for num,j in enumerate(doc_sents_text):
-        src.utils.play_ht_api.generate_track_on_machine(j,f"story_part_{num}.wav",directory,speed="0.815")
+    current_directory = os.getcwd()
+    # Create the directory in the current working directory
+    directory_path = os.path.join(current_directory, Path(directory))
+
+    # audio_directory_location = os.path.
+
+    for num,data in enumerate(doc_sents_text):
+
+        
+        audio = generate(
+        text=data,
+        voice="Bella",
+        model="eleven_monolingual_v1"
+        )
+
+        save(audio, os.path.join(directory,f"story_part_{num}.wav"))
+
 
     complete_audio = os.path.join(directory,"complete.wav")
     src.concate_audio.concate_audio.combine_audio_files_directory(directory,complete_audio)
@@ -50,3 +73,4 @@ if __name__ == '__main__':
 
 
     # dirs = [d for d in os.listdir(r"C:\Users\isaya\code_examples\Machine_Learning\wiki_data_set\reddit\post\") if os.path.isdir(d) and re.match(dir_pattern, d) ]
+    

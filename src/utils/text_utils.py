@@ -18,7 +18,9 @@ def remove_parenthesis(text:str):
     pattern = r'\(([^\s()]+)\)'
     # remove the tokens from the string using regular expressions
     # remove any text enclosed in parentheses if it contains only one word
-    text_without_single_word_parentheses = re.sub(pattern, lambda m: m.group(1) if ' ' in m.group(1) else '', text)
+    text_without_single_word_parentheses = re.sub(
+        pattern, lambda m: m.group(1) if ' ' in m.group(1) else '', text
+        )
     # return text_without_tokens
     return text_without_single_word_parentheses
     
@@ -34,7 +36,7 @@ def add_spaces_around_hyphen(words):
 def add_spaces_around_hyphens(input_str):
     # Replace all hyphens with a space followed by a hyphen followed by another space
     # Example: 'A-I-T-A' -> 'A - I - T - A'
-
+    
     output_str = re.sub(r'-', ' - ', input_str)
     
     return output_str

@@ -1,7 +1,8 @@
-import moviepy.editor as mp
+import time
 import argparse
 from pathlib import Path
-import time
+
+import moviepy.editor as mp
 
 
 def split_video(input_path: Path, output_path: Path, start_time: int, end_time: int) -> None:
@@ -21,7 +22,11 @@ def split_video(input_path: Path, output_path: Path, start_time: int, end_time: 
     if not input_path.exists():
         raise ValueError(f"Input file {input_path} does not exist.")
 
-    if not isinstance(start_time, int) or not isinstance(end_time, int) or start_time < 0 or end_time < 0:
+    if (
+        not isinstance(start_time, int) 
+        or not isinstance(end_time, int) 
+        or start_time < 0 or end_time < 0
+        ):
         raise ValueError("Start and end times must be non-negative integers.")
 
     video = mp.VideoFileClip(str(input_path))

@@ -1,4 +1,4 @@
-from typing import List, Dict, Union, Tuple
+from typing import Tuple
 from moviepy.editor import VideoFileClip
 
 def get_video_size(filename: str) -> Tuple[int, int]:

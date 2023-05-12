@@ -1,7 +1,9 @@
 import random
+import argparse
+
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from moviepy.audio.io.AudioFileClip import AudioFileClip
-import argparse
+
 
 
 def create_clip_with_matching_audio(video_path: str, audio_path: str, output_path: str) -> None:
