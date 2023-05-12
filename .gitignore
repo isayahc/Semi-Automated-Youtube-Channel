@@ -6,6 +6,7 @@ client_secrets.json
 # Ignore directories not meant for GitHub
 /not_for_github
 /Roboto
+/reddit
 
 # Ignore Python cache directories
 **/__pycache__/
