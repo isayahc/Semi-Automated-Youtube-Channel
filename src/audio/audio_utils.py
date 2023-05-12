@@ -7,6 +7,7 @@ from pydub import AudioSegment
 import src.audio.concate_audio
 from utils.play_ht_api import generate_track_on_machine
 from utils.generate_subtitles import *
+from utils.text_utils import g
 
 def silence_segments(input_file, output_file, segments):
     '''silences all selected segments'''
