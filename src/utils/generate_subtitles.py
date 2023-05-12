@@ -8,6 +8,8 @@ from moviepy.editor import VideoFileClip
 import argparse
 from typing import List, Dict, Union, Tuple
 
+from video.utils import get_video_size
+
 
 def transcribe_and_align(input_path: Path, device: str = "cpu", model_type: str = "medium") -> dict:
     """Transcribe and align audio file.
@@ -60,20 +62,6 @@ def segment_text_by_word_length(my_list: List[Dict[str, Union[str, float]]], wor
         complete_segments.append({"text": text, "start": start_time, "end": end_time})
 
     return complete_segments
-
-
-def get_video_size(filename: str) -> Tuple[int, int]:
-    """
-    Get the dimensions (width and height) of a video file.
-
-    Args:
-        filename (str): The path to the video file.
-
-    Returns:
-        Tuple[int, int]: A tuple containing the width and height of the video, in the format (width, height).
-    """
-    video = VideoFileClip(filename)
-    return (video.w, video.h)
 
 
 def add_subtitles_to_video(input_path: str, output_path: str, word_segments: list) -> None:

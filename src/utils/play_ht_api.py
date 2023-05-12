@@ -47,6 +47,7 @@ def generate_ultra_track(body, voice="Larry", speed="0.85"):
     print(response.text)
     return json.loads(response.text)['transcriptionId']
 
+
 def download_file(file_url, file_name, directory):
     """
     Download a file from the specified URL and save it to the given directory with the given file name.
@@ -122,8 +123,6 @@ def generate_track_on_machine(body, file_name, directory, voice="Larry", speed="
     except:
         print("Issue downloading audio")
         
-
-
 
 if __name__ == "__main__":
     text = 'This was a few weeks ago. I was flying to visit my best friend across the USA FL-CA. I get on and am in the back of the plane in an aisle seat 23C. Upon arrival I see a 20 something (f) sitting in my seat so I point out "Hey sorry you are probably in the wrong seat" and show her my ticket. With an eye roll that could have sounded like she was playing Yahtzee she says "oh I\'m 24C." I look at 24C right behind her and see why she took my seat. There is a 300-400lb (f) sitting in the middle seat. I\'m a 6\'1 230lb (m) ...not ideal. After a 15 second stare down I say "well?" and she says she is \'comfortable already\' and \'not moving\' and \'wants to sleep\' blah blah. OK I see how it is....real dumb to put someone upset with you in the seat behind you...I proceeded to set a silent timer on my phone that went off every two minutes to remind myself to kick her seat, violently, and then every time the seat belt sign went off I\'d get up, grabbing the top of the seat to lift myself up pulling her seat back and forth and one time (accidental but worth) pulled her hair she put over the back of the seat. Safe to say she had lots of extra \'turbulence\' and got absolutely no sleep. There were MANY death stares and head turns. Each time I would just smile and wave. I knew she wouldn\'t say anything either because she is not even supposed to be in that seat anyways. Happy travels.'

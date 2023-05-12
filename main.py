@@ -1,4 +1,5 @@
 import os
+
 import spacy
 
 import src.utils.play_ht_api
@@ -39,9 +40,3 @@ if __name__ == '__main__':
 
 
     # dirs = [d for d in os.listdir(r"C:\Users\isaya\code_examples\Machine_Learning\wiki_data_set\reddit\post\") if os.path.isdir(d) and re.match(dir_pattern, d) ]
-
-    
-    
-    
-    src.reddit_apiget_subreddit('dndstories')
-
