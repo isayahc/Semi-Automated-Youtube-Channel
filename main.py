@@ -2,21 +2,22 @@ import os
 from pathlib import Path
 
 import spacy
+from elevenlabs import set_api_key, generate, save
 
 import src.utils.play_ht_api
 import src.utils.reddit_api
 import src.utils.text_utils
 import src.utils.utils
 
-from elevenlabs import set_api_key, generate, save
-
+#configuring elenlabs functionality
 ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
 set_api_key(ELEVENLABS_API_KEY)
 
 if __name__ == '__main__':
 
     #location of where the .wav files will be stored
-    string_audio_file_location = os.path.join("reddit","post")
+    # Access the environment variable
+    STRING_AUDIO_FILE_LOCATION = os.getenv("STRING_AUDIO_FILE_LOCATION")
 
     #gets the data from a selected subreddit
     reddit_subreddit = src.utils.reddit_api.get_subreddit('dndstories')
@@ -47,14 +48,14 @@ if __name__ == '__main__':
 
     # will create a directory in a given location story_n
     # where n is the number of directories with the name story
-    directory = src.utils.utils.create_next_dir(string_audio_file_location)
+    directory = src.utils.utils.create_next_dir(STRING_AUDIO_FILE_LOCATION)
 
     current_directory = os.getcwd()
     # Create the directory in the current working directory
     directory_path = os.path.join(current_directory, Path(directory))
 
     # audio_directory_location = os.path.
-
+    # breaks the entire text into chunks to be joined latter on
     for num,data in enumerate(doc_sents_text):
 
         

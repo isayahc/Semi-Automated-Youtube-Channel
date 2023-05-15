@@ -1,13 +1,7 @@
 import os
-from typing import List, Tuple
 from dotenv import load_dotenv
-from pathlib import Path
 
 import praw
-
-from .play_ht_api import generate_track_on_machine
-from .generate_subtitles import *
-
 
 # Load the .env file
 load_dotenv()
