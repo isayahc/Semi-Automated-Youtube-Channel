@@ -75,5 +75,10 @@ if __name__ == '__main__':
     src.audio.concate_audio.combine_audio_files_directory(audio_directory)
 
     # Use whisper to provide subtitles
+    complete_audio_blank = src.utils.generate_subtitles.transcribe_and_align(complete_audio)
 
-    src.utils.
+    complete_audio_blank_segments = complete_audio_blank['word_segments']
+
+    
+    # Add the subtitles to the video
+    # s = src.utils.generate_subtitles.add_subtitles_to_video(input_path, output_path, word_segments)
