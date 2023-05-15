@@ -9,6 +9,9 @@ import argparse
 
 from src.video.random_sample_clip import create_clip_with_matching_audio
 from src.utils.generate_subtitles import add_subtitles_to_video, transcribe_and_align, segment_text_by_word_length
+import src.utils.utils
+import src.utils.text_utils
+import src.audio.audio_utils
 
 def combine_audio_and_video(video_path: str, audio_path: str, output_path: str) -> None:
     """
@@ -37,7 +40,7 @@ def combine_audio_and_video(video_path: str, audio_path: str, output_path: str) 
     
     subprocess.run(ffmpeg_cmd, check=True)
 
-def generate_video(uncensored_audio_file: str, source_video: str, swear_bank: List[str], out_put_location: str, whisper_model: str = "medium") -> None:
+def generate_video(uncensored_audio_file: str, source_video: str, swear_bank: List[str], video_output_location: str, whisper_model: str = "medium") -> None:
     """
     Generate a censored video with masked audio and subtitles.
 
@@ -45,19 +48,19 @@ def generate_video(uncensored_audio_file: str, source_video: str, swear_bank: Li
         uncensored_audio_file (str): The path to the uncensored audio file.
         source_video (str): The path to the source video file.
         swear_bank (List[str]): A list of swear words to be censored.
-        out_put_location (str): The path to save the generated video.
+        video_output_location (str): The path to save the generated video.
         whisper_model (str, optional): The Whisper ASR model type. Defaults to "medium".
 
     Returns:
         None
     """
-    swear_bank = [*reddit_api.get_swear_bank().keys()]
+    swear_bank = [*src.audio.audio_utils.get_swear_bank().keys()]
 
     raw_transcript = transcribe_and_align(uncensored_audio_file,model_type=whisper_model) #complete script
-    parent_folder = os.path.dirname(out_put_location)
+    parent_folder = os.path.dirname(video_output_location)
 
     segments = raw_transcript['segments']
-    segments = reddit_api.mask_swear_segments(swear_bank,segments)
+    segments = src.audio.audio_utils.mask_swear_segments(swear_bank,segments)
     
     srtFilename = os.path.join(parent_folder, f"VIDEO_FILENAME.srt")
     if os.path.exists(srtFilename):
@@ -76,9 +79,11 @@ def generate_video(uncensored_audio_file: str, source_video: str, swear_bank: Li
 
     raw_word_segments = masked_word_segment = raw_transcript['word_segments']
 
-    masked_script = reddit_api.mask_swear_segments(swear_bank,raw_word_segments) #adds mask to existing script
+    masked_script = src.audio.audio_utils.mask_swear_segments(swear_bank,raw_word_segments) #adds mask to existing script
 
-    swear_segments = reddit_api.filter_text_by_list(raw_word_segments,swear_bank)
+    swear_segments = src.utils.text_utils.filter_text_by_list(raw_word_segments,swear_bank)
+
+    
 
     n_segment = segment_text_by_word_length(masked_script,)
 
@@ -87,12 +92,12 @@ def generate_video(uncensored_audio_file: str, source_video: str, swear_bank: Li
     family_friendly_audio = Path(uncensored_audio_file).with_name("uncensored.wav")
 
 
-    reddit_api.silence_segments(uncensored_audio_file,str(family_friendly_audio),swear_segments)
-
+    src.audio.audio_utils.silence_segments(uncensored_audio_file,str(family_friendly_audio),swear_segments)
+    
     create_clip_with_matching_audio(source_video,str(family_friendly_audio),str(video_clip))
 
 
-    add_subtitles_to_video(str(video_clip),out_put_location,n_segment)
+    add_subtitles_to_video(str(video_clip),video_output_location,n_segment)
 
 def create_next_dir(input_directory:str) ->str:
     input_directory = Path(input_directory)
@@ -127,8 +132,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("uncensored_audio_file", type=str, help="Path to the uncensored audio file")
     parser.add_argument("source_video", type=str, help="Path to the source video file")
-    parser.add_argument("out_put_location", type=str, help="Path to the output video file")
+    parser.add_argument("video_output_location", type=str, help="Path to the output video file")
     parser.add_argument("--swear_bank", type=str, nargs="+", help="List of swear words to mask", default=swear_bank)
     args = parser.parse_args()
 
-    generate_video(args.uncensored_audio_file, args.source_video, args.swear_bank, args.out_put_location)
+    generate_video(args.uncensored_audio_file, args.source_video, args.swear_bank, args.video_output_location)

@@ -2,7 +2,6 @@ import requests
 import json
 import os
 import time
-import subprocess
 import urllib.request
 from dotenv import load_dotenv
 import math

@@ -8,6 +8,8 @@ import src.utils.play_ht_api
 import src.utils.reddit_api
 import src.utils.text_utils
 import src.utils.utils
+import src.audio.concate_audio
+
 
 #configuring elenlabs functionality
 ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
@@ -56,7 +58,6 @@ if __name__ == '__main__':
     # breaks the entire text into chunks to be joined latter on
     for num,data in enumerate(doc_sents_text):
 
-        
         audio = generate(
         text=data,
         voice="Bella",
@@ -66,8 +67,8 @@ if __name__ == '__main__':
         save(audio, os.path.join(audio_directory,f"story_part_{num}.wav"))
 
 
-    # location of where the concated audio files will be stored
+    # location of where the concated audio files will be stored as a single .wav file
     complete_audio = os.path.join(audio_directory,"complete.wav")
-    src.concate_audio.concate_audio.combine_audio_files_directory(audio_directory,complete_audio)
 
-    
+    # concatinate all the videos in a directory
+    src.audio.concate_audio.combine_audio_files_directory(audio_directory)
