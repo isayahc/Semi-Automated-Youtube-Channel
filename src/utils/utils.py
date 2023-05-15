@@ -6,10 +6,7 @@ from typing import List
 from datetime import timedelta
 from pathlib import Path
 import argparse
-import natsort
 
-import src.audio.concate_audio
-import src.audio.audio_utils
 from src.video.random_sample_clip import create_clip_with_matching_audio
 from src.utils.generate_subtitles import add_subtitles_to_video, transcribe_and_align, segment_text_by_word_length
 

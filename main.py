@@ -11,14 +11,12 @@ import src.utils.utils
 
 #configuring elenlabs functionality
 ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
+#location of where the .wav files will be stored
+# Access the environment variable
+STRING_AUDIO_FILE_LOCATION = os.getenv("STRING_AUDIO_FILE_LOCATION")
 set_api_key(ELEVENLABS_API_KEY)
 
 if __name__ == '__main__':
-
-    #location of where the .wav files will be stored
-    # Access the environment variable
-    STRING_AUDIO_FILE_LOCATION = os.getenv("STRING_AUDIO_FILE_LOCATION")
-
     #gets the data from a selected subreddit
     reddit_subreddit = src.utils.reddit_api.get_subreddit('dndstories')
 
@@ -48,11 +46,11 @@ if __name__ == '__main__':
 
     # will create a directory in a given location story_n
     # where n is the number of directories with the name story
-    directory = src.utils.utils.create_next_dir(STRING_AUDIO_FILE_LOCATION)
+    audio_directory = src.utils.utils.create_next_dir(STRING_AUDIO_FILE_LOCATION)
 
     current_directory = os.getcwd()
     # Create the directory in the current working directory
-    directory_path = os.path.join(current_directory, Path(directory))
+    directory_path = os.path.join(current_directory, Path(audio_directory))
 
     # audio_directory_location = os.path.
     # breaks the entire text into chunks to be joined latter on
@@ -65,13 +63,11 @@ if __name__ == '__main__':
         model="eleven_monolingual_v1"
         )
 
-        save(audio, os.path.join(directory,f"story_part_{num}.wav"))
+        save(audio, os.path.join(audio_directory,f"story_part_{num}.wav"))
 
 
-    complete_audio = os.path.join(directory,"complete.wav")
-    src.concate_audio.concate_audio.combine_audio_files_directory(directory,complete_audio)
+    # location of where the concated audio files will be stored
+    complete_audio = os.path.join(audio_directory,"complete.wav")
+    src.concate_audio.concate_audio.combine_audio_files_directory(audio_directory,complete_audio)
 
-
-
-    # dirs = [d for d in os.listdir(r"C:\Users\isaya\code_examples\Machine_Learning\wiki_data_set\reddit\post\") if os.path.isdir(d) and re.match(dir_pattern, d) ]
     
