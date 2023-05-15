@@ -7,6 +7,7 @@ from elevenlabs import set_api_key, generate, save
 import src.utils.play_ht_api
 import src.utils.reddit_api
 import src.utils.text_utils
+import src.utils.generate_subtitles
 import src.utils.utils
 import src.audio.concate_audio
 
@@ -72,3 +73,7 @@ if __name__ == '__main__':
 
     # concatinate all the videos in a directory
     src.audio.concate_audio.combine_audio_files_directory(audio_directory)
+
+    # Use whisper to provide subtitles
+
+    src.utils.

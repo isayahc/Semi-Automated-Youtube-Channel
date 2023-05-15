@@ -6,9 +6,11 @@ import pandas as pd
 from moviepy.video.tools.subtitles import SubtitlesClip
 from moviepy.editor import VideoFileClip
 import argparse
-from typing import List, Dict, Union, Tuple
+from typing import List, Dict, Union, TypeAlias
 
 from src.video.utils import get_video_size
+
+TextSegmentList = TypeAlias[List[Dict[str, Union[str, float]]]]
 
 
 def transcribe_and_align(input_path: Path, device: str = "cpu", model_type: str = "medium") -> dict:
@@ -31,17 +33,35 @@ def transcribe_and_align(input_path: Path, device: str = "cpu", model_type: str 
     return result_aligned
 
 
-def segment_text_by_word_length(my_list: List[Dict[str, Union[str, float]]], word_length_max: int = 5) -> List[Dict[str, Union[str, float]]]:
+def segment_text_by_word_length(
+    my_list: TextSegmentList,
+    word_length_max: int = 5
+) -> TextSegmentList:
     """
     Segments a list of dictionaries containing text and timestamps into groups of a specified maximum word length.
-    
+
     Args:
-        my_list (List[Dict[str, Union[str, float]]]): A list of dictionaries containing 'text', 'start', and 'end' keys.
+        my_list (TextSegmentList): A list of dictionaries containing 'text', 'start', and 'end' keys.
         word_length_max (int, optional): The maximum number of words per segment. Defaults to 5.
 
     Returns:
-        List[Dict[str, Union[str, float]]]: A list of dictionaries containing the segmented text and corresponding start and end timestamps.
+        TextSegmentList: A list of dictionaries containing the segmented text and corresponding start and end timestamps.
     """
+    if not isinstance(my_list, list):
+        raise TypeError("Input 'my_list' must be a list of dictionaries.")
+
+    if not all(isinstance(item, dict) for item in my_list):
+        raise TypeError("Each item in 'my_list' must be a dictionary.")
+
+    if not all(
+        all(key in item for key in ["text", "start", "end"])
+        for item in my_list
+    ):
+        raise ValueError("Each dictionary in 'my_list' must have 'text', 'start', and 'end' keys.")
+
+    if not isinstance(word_length_max, int) or word_length_max < 1:
+        raise ValueError("Invalid value for 'word_length_max'. It must be a positive integer.")
+
     segmented_text = []
     temp_segment = []
 
@@ -63,15 +83,15 @@ def segment_text_by_word_length(my_list: List[Dict[str, Union[str, float]]], wor
 
     return complete_segments
 
-
-def add_subtitles_to_video(input_path: str, output_path: str, word_segments: list) -> None:
+def add_subtitles_to_video(input_path: str, output_path: str, word_segments: TextSegmentList) -> None:
     """
     Add subtitles to a video file based on word segments with start and end times.
 
     Args:
         input_path (str): The path to the input video file.
         output_path (str): The path to the output video file with subtitles added.
-        word_segments (list): A list of dictionaries containing 'text', 'start', and 'end' keys for each word segment.
+        word_segments (TextSegmentList): A list of dictionaries containing 'text', 'start', and 'end' keys
+            for each word segment.
 
     Returns:
         None

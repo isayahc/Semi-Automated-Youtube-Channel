@@ -5,7 +5,6 @@ import csv
 from pydub import AudioSegment
 
 import src.audio.concate_audio
-from src.utils.play_ht_api import generate_track_on_machine
 from src.utils.generate_subtitles import *
 import src.utils.text_utils
 
