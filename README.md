@@ -23,6 +23,12 @@ Follow these steps to set up the project locally:
 3. Install the required dependencies: `pip3 install -r requirements.txt` for linux `pip install -r requirements.txt` for windows
 4. Configure the API keys and authentication credentials in the example.env file
 
+## System Requirements
+
+### Python Version
+
+This software was written in Python 3.9.7. There is a possiblity there will be errors if an Earlier version is used to compile.
+
 ## Testing
 
 to run test input the command
