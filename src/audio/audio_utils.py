@@ -9,7 +9,7 @@ import src.audio.concate_audio
 from src.utils.generate_subtitles import *
 import src.utils.text_utils
 
-SWEAR_WORD_LIST_FILE_LOCATION = os.getenv('SWEAR_WORD_LIST_FILE_LOCATION')
+SWEAR_WORD_LIST_FILE_LOCATION = os.getenv('SWEAR_WORD_LIST_FILE_LOCATION_FILE_LOCATION')
 
 def silence_segments(input_file, output_file, segments):
     '''silences all selected segments'''

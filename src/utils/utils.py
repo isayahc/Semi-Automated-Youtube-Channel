@@ -40,7 +40,7 @@ def combine_audio_and_video(video_path: str, audio_path: str, output_path: str) 
     
     subprocess.run(ffmpeg_cmd, check=True)
 
-def generate_video(uncensored_audio_file: str, source_video: str, swear_word_list: List[str], video_output_location: str, whisper_model: str = "medium") -> None:
+def generate_video_with_subtitles(uncensored_audio_file: str, source_video: str, swear_word_list: List[str], video_output_location: str, whisper_model: str = "medium") -> None:
     """
     Generate a censored video with masked audio and subtitles.
 
@@ -99,7 +99,8 @@ def generate_video(uncensored_audio_file: str, source_video: str, swear_word_lis
 
     add_subtitles_to_video(str(video_clip),video_output_location,n_segment)
 
-def create_next_dir(input_directory:str) ->str:
+
+def create_next_dir(input_directory: str) -> str:
     input_directory = Path(input_directory)
     is_absolute = input_directory.is_absolute()
 
@@ -111,20 +112,21 @@ def create_next_dir(input_directory:str) ->str:
         directory_path = Path.joinpath(current_directory, input_directory)
         if directory_path.exists():
             dirs = [d for d in os.listdir(directory_path) if re.match(dir_pattern, d)]
-            # get the last directory in the sorted list
-            last_dir = dirs[-1]
-            # extract the number from the directory name and add 1
-            next_num = int(re.search(r'\d+', last_dir).group()) + 1
+            # extract the numbers from the directory names and convert them to integers
+            dir_numbers = [int(re.search(r'\d+', d).group()) for d in dirs]
+            # get the maximum number
+            next_num = max(dir_numbers) + 1
             # create the new directory name
             new_dir = f'story_{next_num}'
-            directory_path = Path.joinpath(current_directory, input_directory,Path(new_dir))
+            directory_path = Path.joinpath(current_directory, input_directory, Path(new_dir))
 
         else:
-            directory_path = Path.joinpath(current_directory, input_directory,Path('story_1'))
-            
+            directory_path = Path.joinpath(current_directory, input_directory, Path('story_1'))
+
     os.makedirs(directory_path)
 
     return directory_path
+
 
 if __name__ == "__main__":
     # swear_word_list = [*audio.audio_utils.get_swear_word_list().keys()]
@@ -136,4 +138,4 @@ if __name__ == "__main__":
     parser.add_argument("--swear_word_list", type=str, nargs="+", help="List of swear words to mask", default=swear_word_list)
     args = parser.parse_args()
 
-    generate_video(args.uncensored_audio_file, args.source_video, args.swear_word_list, args.video_output_location)
+    generate_video_with_subtitles(args.uncensored_audio_file, args.source_video, args.swear_word_list, args.video_output_location)

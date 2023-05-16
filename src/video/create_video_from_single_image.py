@@ -4,7 +4,7 @@ import subprocess
 from typing import Tuple
 from PIL import Image
 
-def create_video(input_img: str, input_audio: str, output_file: str, output_extension: str = "mp4", img_size: Tuple[int, int] = (1080, 1920)) -> None:
+def create_video_from_single_image(input_img: str, input_audio: str, output_file: str, output_extension: str = "mp4", img_size: Tuple[int, int] = (1080, 1920)) -> None:
     """
     Creates a video using an input image and audio, with the specified output extension and image size.
     
@@ -35,7 +35,7 @@ def main():
     parser.add_argument("-e", "--output_extension", help="Extension of the output video file", default="mp4")
 
     args = parser.parse_args()
-    create_video(args.input_img, args.input_audio, args.output_file, args.output_extension)
+    create_video_from_single_image(args.input_img, args.input_audio, args.output_file, args.output_extension)
 
 if __name__ == "__main__":
     main()
