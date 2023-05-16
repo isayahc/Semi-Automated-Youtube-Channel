@@ -27,7 +27,7 @@ Follow these steps to set up the project locally:
 
 ### Python Version
 
-This software was written in Python 3.9.7. There is a possiblity there will be errors if an Earlier version is used to compile.
+This software was written in Python 3.9.7. There is a possiblity there will be errors if an earlier version is used to compile.
 
 ## Testing
 
