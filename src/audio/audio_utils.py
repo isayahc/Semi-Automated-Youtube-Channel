@@ -1,5 +1,6 @@
 from typing import List, Tuple, Dict, Union
 import re
+import os
 
 import csv
 from pydub import AudioSegment
@@ -7,6 +8,8 @@ from pydub import AudioSegment
 import src.audio.concate_audio
 from src.utils.generate_subtitles import *
 import src.utils.text_utils
+
+SWEAR_WORD_LIST_FILE_LOCATION = os.getenv('SWEAR_WORD_LIST_FILE_LOCATION')
 
 def silence_segments(input_file, output_file, segments):
     '''silences all selected segments'''
@@ -29,11 +32,11 @@ def silence_segments(input_file, output_file, segments):
     # Export the modified audio to a file
     audio.export(output_file, format="wav")
 
-def make_family_friendly(input_data:str,swear_bank:List[str],output_data:str="output0.wav"):
+def make_family_friendly(input_data:str,swear_word_list:List[str],output_data:str="output0.wav"):
     x = transcribe_and_align(input_data)
     x_word_segments = x['word_segments']
 
-    swear_word_segements = src.utils.text_utils.filter_text_by_list(x_word_segments,swear_bank)
+    swear_word_segements = src.utils.text_utils.filter_text_by_list(x_word_segments,swear_word_list)
 
     silence_segments(input_data, output_data, swear_word_segements)
 
@@ -46,15 +49,15 @@ def mask_swear_segments(word_list: List[str], x_word_segments: List[Dict[str, Un
     return x_word_segments_copy
 
 def remove_swears(audio_script:str) ->str:
-    links_dict = get_swear_bank()
+    links_dict = get_swear_word_list()
 
     for word, replacement in links_dict.items():
         audio_script = audio_script.replace(word, replacement)
 
     return audio_script
 
-def get_swear_bank():
-        with open(r'C:\Users\isaya\code_examples\Machine_Learning\wiki_data_set\reddit\censor.csv', 'r') as f:
+def get_swear_word_list():
+        with open(SWEAR_WORD_LIST_FILE_LOCATION, 'r') as f:
             reader = csv.reader(f)
             # create a dictionary with the first column as the keys and the second column as the values
             links_dict = {rows[0]: rows[1] for rows in reader}

@@ -40,27 +40,27 @@ def combine_audio_and_video(video_path: str, audio_path: str, output_path: str) 
     
     subprocess.run(ffmpeg_cmd, check=True)
 
-def generate_video(uncensored_audio_file: str, source_video: str, swear_bank: List[str], video_output_location: str, whisper_model: str = "medium") -> None:
+def generate_video(uncensored_audio_file: str, source_video: str, swear_word_list: List[str], video_output_location: str, whisper_model: str = "medium") -> None:
     """
     Generate a censored video with masked audio and subtitles.
 
     Args:
         uncensored_audio_file (str): The path to the uncensored audio file.
         source_video (str): The path to the source video file.
-        swear_bank (List[str]): A list of swear words to be censored.
+        swear_word_list (List[str]): A list of swear words to be censored.
         video_output_location (str): The path to save the generated video.
         whisper_model (str, optional): The Whisper ASR model type. Defaults to "medium".
 
     Returns:
         None
     """
-    swear_bank = [*src.audio.audio_utils.get_swear_bank().keys()]
+    swear_word_list = [*src.audio.audio_utils.get_swear_word_list().keys()]
 
     raw_transcript = transcribe_and_align(uncensored_audio_file,model_type=whisper_model) #complete script
     parent_folder = os.path.dirname(video_output_location)
 
     segments = raw_transcript['segments']
-    segments = src.audio.audio_utils.mask_swear_segments(swear_bank,segments)
+    segments = src.audio.audio_utils.mask_swear_segments(swear_word_list,segments)
     
     srtFilename = os.path.join(parent_folder, f"VIDEO_FILENAME.srt")
     if os.path.exists(srtFilename):
@@ -79,9 +79,9 @@ def generate_video(uncensored_audio_file: str, source_video: str, swear_bank: Li
 
     raw_word_segments = masked_word_segment = raw_transcript['word_segments']
 
-    masked_script = src.audio.audio_utils.mask_swear_segments(swear_bank,raw_word_segments) #adds mask to existing script
+    masked_script = src.audio.audio_utils.mask_swear_segments(swear_word_list,raw_word_segments) #adds mask to existing script
 
-    swear_segments = src.utils.text_utils.filter_text_by_list(raw_word_segments,swear_bank)
+    swear_segments = src.utils.text_utils.filter_text_by_list(raw_word_segments,swear_word_list)
 
     
 
@@ -127,13 +127,13 @@ def create_next_dir(input_directory:str) ->str:
     return directory_path
 
 if __name__ == "__main__":
-    # swear_bank = [*audio.audio_utils.get_swear_bank().keys()]
-    swear_bank = []
+    # swear_word_list = [*audio.audio_utils.get_swear_word_list().keys()]
+    swear_word_list = []
     parser = argparse.ArgumentParser()
     parser.add_argument("uncensored_audio_file", type=str, help="Path to the uncensored audio file")
     parser.add_argument("source_video", type=str, help="Path to the source video file")
     parser.add_argument("video_output_location", type=str, help="Path to the output video file")
-    parser.add_argument("--swear_bank", type=str, nargs="+", help="List of swear words to mask", default=swear_bank)
+    parser.add_argument("--swear_word_list", type=str, nargs="+", help="List of swear words to mask", default=swear_word_list)
     args = parser.parse_args()
 
-    generate_video(args.uncensored_audio_file, args.source_video, args.swear_bank, args.video_output_location)
+    generate_video(args.uncensored_audio_file, args.source_video, args.swear_word_list, args.video_output_location)

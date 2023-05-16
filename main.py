@@ -55,7 +55,6 @@ if __name__ == '__main__':
     # Create the directory in the current working directory
     directory_path = os.path.join(current_directory, Path(audio_directory))
 
-    # audio_directory_location = os.path.
     # breaks the entire text into chunks to be joined latter on
     for num,data in enumerate(doc_sents_text):
 
@@ -79,6 +78,8 @@ if __name__ == '__main__':
 
     complete_audio_blank_segments = complete_audio_blank['word_segments']
 
+    subtitltes = src.utils.generate_subtitles.segment_text_by_word_length(complete_audio_blank_segments)
+
     
     # Add the subtitles to the video
-    # s = src.utils.generate_subtitles.add_subtitles_to_video(input_path, output_path, word_segments)
+    # s = src.utils.generate_subtitles.add_subtitles_to_video(input_path, output_path, subtitles)

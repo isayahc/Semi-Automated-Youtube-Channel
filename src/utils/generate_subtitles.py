@@ -1,16 +1,18 @@
-import moviepy.editor as mp
 from pathlib import Path
+import argparse
+from typing import List, Dict, Union
+
+import moviepy.editor as mp
 import whisperx
 import whisper
 import pandas as pd
 from moviepy.video.tools.subtitles import SubtitlesClip
 from moviepy.editor import VideoFileClip
-import argparse
-from typing import List, Dict, Union, TypeAlias
+
 
 from src.video.utils import get_video_size
 
-TextSegmentList = TypeAlias[List[Dict[str, Union[str, float]]]]
+TextSegmentList = [List[Dict[str, Union[str, float]]]]
 
 
 def transcribe_and_align(input_path: Path, device: str = "cpu", model_type: str = "medium") -> dict:
@@ -34,7 +36,7 @@ def transcribe_and_align(input_path: Path, device: str = "cpu", model_type: str 
 
 
 def segment_text_by_word_length(
-    my_list: TextSegmentList,
+    my_list: list,
     word_length_max: int = 5
 ) -> TextSegmentList:
     """
