@@ -1,7 +1,5 @@
 import re
-from typing import List
-
-from .generate_subtitles import *
+from typing import List, Dict, Union
 
 
 def replace_caps_with_hyphens(sentence):

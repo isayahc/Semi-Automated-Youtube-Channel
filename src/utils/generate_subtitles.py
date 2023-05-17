@@ -4,13 +4,12 @@ from typing import List, Dict, Union
 
 import moviepy.editor as mp
 import whisperx
-import whisper
 import pandas as pd
 from moviepy.video.tools.subtitles import SubtitlesClip
 from moviepy.editor import VideoFileClip
 
 
-from src.video.utils import get_video_size
+from src.video import utils
 
 TextSegmentList = [List[Dict[str, Union[str, float]]]]
 
@@ -106,7 +105,7 @@ def add_subtitles_to_video(input_path: str, output_path: str, word_segments: Tex
 
     df = pd.DataFrame.from_dict(text_clip_data)
 
-    movie_width, movie_height = get_video_size(input_path)
+    movie_width, movie_height = utils.get_video_size(input_path)
     # Write the video file
     video = VideoFileClip(input_path)
     generator = lambda txt: mp.TextClip(txt, fontsize=80, color='black', align='center', font='P052-Bold', stroke_width=3, bg_color="white",method='caption',size=(movie_width, movie_height))

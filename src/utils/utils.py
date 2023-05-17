@@ -7,11 +7,10 @@ from datetime import timedelta
 from pathlib import Path
 import argparse
 
-from src.video.random_sample_clip import create_clip_with_matching_audio
-from src.utils.generate_subtitles import add_subtitles_to_video, transcribe_and_align, segment_text_by_word_length
-import src.utils.utils
-import src.utils.text_utils
-import src.audio.audio_utils
+from src.video import random_sample_clip
+from src.utils import generate_subtitles, text_utils
+from src.audio import audio_utils
+
 
 def combine_audio_and_video(
         video_path: str, 
@@ -62,13 +61,13 @@ def generate_video_with_subtitles(
     Returns:
         None
     """
-    swear_word_list = [*src.audio.audio_utils.get_swear_word_list().keys()]
+    swear_word_list = [*audio_utils.get_swear_word_list().keys()]
 
-    raw_transcript = transcribe_and_align(uncensored_audio_file,model_type=whisper_model) #complete script
+    raw_transcript = generate_subtitles.transcribe_and_align(uncensored_audio_file,model_type=whisper_model) #complete script
     parent_folder = os.path.dirname(video_output_location)
 
     segments = raw_transcript['segments']
-    segments = src.audio.audio_utils.mask_swear_segments(swear_word_list,segments)
+    segments = audio_utils.mask_swear_segments(swear_word_list,segments)
     
     srtFilename = os.path.join(parent_folder, f"VIDEO_FILENAME.srt")
     if os.path.exists(srtFilename):
@@ -86,24 +85,24 @@ def generate_video_with_subtitles(
 
     raw_word_segments = masked_word_segment = raw_transcript['word_segments']
 
-    masked_script = src.audio.audio_utils.mask_swear_segments(swear_word_list,raw_word_segments) #adds mask to existing script
+    masked_script = audio_utils.mask_swear_segments(swear_word_list,raw_word_segments) #adds mask to existing script
 
-    swear_segments = src.utils.text_utils.filter_text_by_list(raw_word_segments,swear_word_list)
+    swear_segments = text_utils.filter_text_by_list(raw_word_segments,swear_word_list)
     
 
-    n_segment = segment_text_by_word_length(masked_script,)
+    n_segment = generate_subtitles.segment_text_by_word_length(masked_script,)
 
     video_clip = Path("sample.mp4")
 
     family_friendly_audio = Path(uncensored_audio_file).with_name("uncensored.wav")
 
 
-    src.audio.audio_utils.silence_segments(uncensored_audio_file,str(family_friendly_audio),swear_segments)
+    audio_utils.silence_segments(uncensored_audio_file,str(family_friendly_audio),swear_segments)
     
-    create_clip_with_matching_audio(source_video,str(family_friendly_audio),str(video_clip))
+    random_sample_clip.random_sample_clip(source_video,str(family_friendly_audio),str(video_clip))
 
 
-    add_subtitles_to_video(str(video_clip),video_output_location,n_segment)
+    generate_subtitles.add_subtitles_to_video(str(video_clip),video_output_location,n_segment)
 
 
 def create_next_dir(input_directory: str) -> str:

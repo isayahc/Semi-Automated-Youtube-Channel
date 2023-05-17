@@ -78,7 +78,12 @@ def main():
         args.swear_word_list = audio_utils.get_swear_word_list().keys()
 
     try:
-        utils.generate_video_with_subtitles(args.audio_link, args.vid_link, args.swear_word_list, args.video_output)
+        utils.generate_video_with_subtitles(
+            args.audio_link, 
+            args.vid_link, 
+            args.swear_word_list, 
+            args.video_output
+            )
     except Exception as e:
         print(f"An error occurred: {e}")
         # Handle the exception accordingly

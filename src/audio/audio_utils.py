@@ -5,9 +5,10 @@ import os
 import csv
 from pydub import AudioSegment
 
-import src.audio.concate_audio
+from src.audio import concate_audio
+from src.utils import (generate_subtitles, text_utils)
 from src.utils.generate_subtitles import *
-import src.utils.text_utils
+
 
 SWEAR_WORD_LIST_FILE_LOCATION = os.getenv('SWEAR_WORD_LIST_FILE_LOCATION_FILE_LOCATION')
 
@@ -36,7 +37,7 @@ def make_family_friendly(input_data:str,swear_word_list:List[str],output_data:st
     x = transcribe_and_align(input_data)
     x_word_segments = x['word_segments']
 
-    swear_word_segements = src.utils.text_utils.filter_text_by_list(x_word_segments,swear_word_list)
+    swear_word_segements = text_utils.filter_text_by_list(x_word_segments,swear_word_list)
 
     silence_segments(input_data, output_data, swear_word_segements)
 
