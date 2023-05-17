@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import argparse
 
 # Third party imports
 from elevenlabs import set_api_key, generate, save
@@ -36,7 +37,6 @@ def main():
     # Create the directory in the current working directory
     directory_path = os.path.join(current_directory, Path(audio_directory))
 
-
     complete_audio = os.path.join(audio_directory,f"story_part_0.wav")
 
     swear_word_list = [*audio_utils.get_swear_word_list().keys()]
@@ -49,30 +49,36 @@ def main():
         )
     save(audio, complete_audio)
 
-
-    # location of where the concated audio files will be stored as a single .wav file
-    # complete_audio = os.path.join(audio_directory,"complete.wav")
-
-    # concatinate all the videos in a directory
-    # src.audio.concate_audio.combine_audio_files_directory(audio_directory)
-
-    # Use whisper to provide subtitles
-    complete_audio_blank = generate_subtitles.transcribe_and_align(complete_audio)
-
-    complete_audio_blank_segments = complete_audio_blank['word_segments']
-
-    subtitles = generate_subtitles.segment_text_by_word_length(complete_audio_blank_segments)
-
+    
+    audio_link = r"audio_link.wav"
+    
     vid_link = r'sample_video.mp4'
 
-    random_sample_clip.create_clip_with_matching_audio(vid_link,complete_audio,"sample.mp4")
-    
-    # Add the subtitles to the video
-    # s = generate_subtitles.add_subtitles_to_video("sample.mp4", "sample.mp4", subtitles)
+    video_output = r"sample_0.mp4"
 
-    utils.generate_video_with_subtitles(complete_audio,vid_link,None,"sample_0.mp4")
+    # utils.generate_video_with_subtitles(audio_link,vid_link,swear_word_list,video_output)
 
-    x=0
+
+    utils.generate_video_with_subtitles(complete_audio,vid_link,swear_word_list,video_output)
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Generate video with subtitles.')
+    parser.add_argument('--audio_link', type=str, required=True,
+                        help='Path to the audio file.')
+    parser.add_argument('--vid_link', type=str, required=True,
+                        help='Path to the video file.')
+    parser.add_argument('--swear_word_list', nargs='+', required=False, default=[],
+                        help='List of swear words to be filtered out.')
+    parser.add_argument('--video_output', type=str, required=True,
+                        help='Path for the output video file.')
+    args = parser.parse_args()
+
+    try:
+        utils.generate_video_with_subtitles(args.audio_link, args.vid_link, args.swear_word_list, args.video_output)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        # Handle the exception accordingly
 
 if __name__ == '__main__':
     ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')

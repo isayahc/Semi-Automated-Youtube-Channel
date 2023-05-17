@@ -13,7 +13,10 @@ import src.utils.utils
 import src.utils.text_utils
 import src.audio.audio_utils
 
-def combine_audio_and_video(video_path: str, audio_path: str, output_path: str) -> None:
+def combine_audio_and_video(
+        video_path: str, 
+        audio_path: str, 
+        output_path: str) -> None:
     """
     Combine the given audio and video files into a single output video file.
 
@@ -40,7 +43,12 @@ def combine_audio_and_video(video_path: str, audio_path: str, output_path: str) 
     
     subprocess.run(ffmpeg_cmd, check=True)
 
-def generate_video_with_subtitles(uncensored_audio_file: str, source_video: str, swear_word_list: List[str], video_output_location: str, whisper_model: str = "medium") -> None:
+def generate_video_with_subtitles(
+        uncensored_audio_file: str, 
+        source_video: str, 
+        swear_word_list: List[str], 
+        video_output_location: str, 
+        whisper_model: str = "medium") -> None:
     """
     Generate a censored video with masked audio and subtitles.
 
@@ -76,13 +84,11 @@ def generate_video_with_subtitles(uncensored_audio_file: str, source_video: str,
             srtFile.write(segment)
 
 
-
     raw_word_segments = masked_word_segment = raw_transcript['word_segments']
 
     masked_script = src.audio.audio_utils.mask_swear_segments(swear_word_list,raw_word_segments) #adds mask to existing script
 
     swear_segments = src.utils.text_utils.filter_text_by_list(raw_word_segments,swear_word_list)
-
     
 
     n_segment = segment_text_by_word_length(masked_script,)
