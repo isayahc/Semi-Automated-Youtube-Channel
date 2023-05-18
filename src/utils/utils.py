@@ -46,7 +46,8 @@ def generate_video_with_subtitles(
         uncensored_audio_file: str, 
         source_video: str, 
         swear_word_list: List[str], 
-        video_output_location: str,
+        video_output_location: str, 
+        srtFilename: str = "", 
         whisper_model: str = "medium") -> None:
     """
     Generate a censored video with masked audio and subtitles.
@@ -56,14 +57,15 @@ def generate_video_with_subtitles(
         source_video (str): The path to the source video file.
         swear_word_list (List[str]): A list of swear words to be censored.
         video_output_location (str): The path to save the generated video.
+        srtFilename (str, optional): The path to save the subtitle file. If not provided, no subtitle file will be saved.
         whisper_model (str, optional): The Whisper ASR model type. Defaults to "medium".
 
     Returns:
         None
     """
-
+    
     parent_folder = os.path.dirname(video_output_location)
-    srtFilename = os.path.join(parent_folder, f"VIDEO_FILENAME.srt")
+    srtFilename = os.path.join(parent_folder, srtFilename) if srtFilename else ""
     video_clip = Path("sample.mp4")
     family_friendly_audio = Path(uncensored_audio_file).with_name("uncensored.wav")
     
@@ -74,7 +76,6 @@ def generate_video_with_subtitles(
         model_type=whisper_model
         )
     
-
     segments = raw_transcript['segments']
 
     segments = audio_utils.mask_swear_segments(
@@ -83,11 +84,12 @@ def generate_video_with_subtitles(
         )
     
     
-    if os.path.exists(srtFilename):
-        os.remove(srtFilename)
+    if srtFilename:
+        if os.path.exists(srtFilename):
+            os.remove(srtFilename)
 
-    #generate srt file from segments
-    write_srt_file(segments, srtFilename)
+        #generate srt file from segments
+        write_srt_file(segments, srtFilename)
 
     raw_word_segments  = raw_transcript['word_segments']
 
@@ -96,7 +98,6 @@ def generate_video_with_subtitles(
         swear_word_list,
         raw_word_segments
         )
-
     
     #find times when the speaker swears
     swear_segments = text_utils.filter_text_by_list(
@@ -104,9 +105,7 @@ def generate_video_with_subtitles(
         swear_word_list
         )
     
-
     n_segment = generate_subtitles.segment_text_by_word_length(masked_script,)
-
 
     audio_utils.silence_segments(
         uncensored_audio_file,

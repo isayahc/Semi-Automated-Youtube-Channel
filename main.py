@@ -24,19 +24,22 @@ def main():
                         help='List of swear words to be filtered out.')
     parser.add_argument('--video_output', type=str, required=True,
                         help='Path for the output video file.')
+    parser.add_argument('--srtFilename', type=str, required=False, default="",
+                        help='Path for the subtitle file. If not provided, no subtitle file will be saved.')
+    
     args = parser.parse_args()
-
 
     if not args.swear_word_list:
         args.swear_word_list = audio_utils.get_swear_word_list().keys()
 
-    
     utils.generate_video_with_subtitles(
         args.audio_link, 
         args.vid_link, 
         args.swear_word_list, 
-        args.video_output
+        args.video_output,
+        args.srtFilename
         )
+
 
     
 if __name__ == '__main__':
