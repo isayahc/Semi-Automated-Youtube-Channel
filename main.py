@@ -30,8 +30,8 @@ def main():
                         help='Path to the audio file.')
     parser.add_argument('--vid_link', type=str, required=True,
                         help='Path to the video file.')
-    parser.add_argument('--swear_word_list', nargs='+', required=False, default=[],
-                        help='List of swear words to be filtered out.')
+    parser.add_argument('--swear_word_list', type=str, required=False, default="",
+                        help='Path to the text file with a list of swear words to be filtered out.')
     parser.add_argument('--video_output', type=str, required=True,
                         help='Path for the output video file.')
     parser.add_argument('--srtFilename', type=str, required=False, default="",
@@ -43,8 +43,12 @@ def main():
     validate_args(args)
 
     # If no swear word list is provided, default to the predefined list
-    if not args.swear_word_list:
+    if args.swear_word_list:
+        with open(args.swear_word_list, 'r') as file:
+            args.swear_word_list = [word.strip() for word in file.readlines()]
+    else:
         args.swear_word_list = audio_utils.get_swear_word_list().keys()
+
 
     utils.generate_video_with_subtitles(
         args.audio_link, 
