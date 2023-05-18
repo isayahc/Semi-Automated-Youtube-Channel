@@ -63,7 +63,11 @@ def generate_video_with_subtitles(
     """
     swear_word_list = [*audio_utils.get_swear_word_list().keys()]
 
-    raw_transcript = generate_subtitles.transcribe_and_align(uncensored_audio_file,model_type=whisper_model) #complete script
+    raw_transcript = generate_subtitles.transcribe_and_align(
+        uncensored_audio_file,
+        model_type=whisper_model
+        ) #complete script
+    
     parent_folder = os.path.dirname(video_output_location)
 
     segments = raw_transcript['segments']
@@ -83,7 +87,7 @@ def generate_video_with_subtitles(
             srtFile.write(segment)
 
 
-    raw_word_segments = masked_word_segment = raw_transcript['word_segments']
+    raw_word_segments  = raw_transcript['word_segments']
 
     masked_script = audio_utils.mask_swear_segments(swear_word_list,raw_word_segments) #adds mask to existing script
 
@@ -97,12 +101,23 @@ def generate_video_with_subtitles(
     family_friendly_audio = Path(uncensored_audio_file).with_name("uncensored.wav")
 
 
-    audio_utils.silence_segments(uncensored_audio_file,str(family_friendly_audio),swear_segments)
+    audio_utils.silence_segments(
+        uncensored_audio_file,
+        str(family_friendly_audio),
+        swear_segments
+        )
     
-    random_sample_clip.random_sample_clip(source_video,str(family_friendly_audio),str(video_clip))
+    random_sample_clip.create_clip_with_matching_audio(
+        source_video,
+        str(family_friendly_audio),
+        str(video_clip)
+        )
 
-
-    generate_subtitles.add_subtitles_to_video(str(video_clip),video_output_location,n_segment)
+    generate_subtitles.add_subtitles_to_video(
+        str(video_clip),
+        video_output_location,
+        n_segment
+        )
 
 
 def create_next_dir(input_directory: str) -> str:
