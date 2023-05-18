@@ -1,7 +1,7 @@
 import os
 import subprocess
 import re
-from typing import List
+from typing import List, Dict, Any
 
 from datetime import timedelta
 from pathlib import Path
@@ -46,7 +46,7 @@ def generate_video_with_subtitles(
         uncensored_audio_file: str, 
         source_video: str, 
         swear_word_list: List[str], 
-        video_output_location: str, 
+        video_output_location: str,
         whisper_model: str = "medium") -> None:
     """
     Generate a censored video with masked audio and subtitles.
@@ -61,44 +61,51 @@ def generate_video_with_subtitles(
     Returns:
         None
     """
-    swear_word_list = [*audio_utils.get_swear_word_list().keys()]
+
+    parent_folder = os.path.dirname(video_output_location)
+    srtFilename = os.path.join(parent_folder, f"VIDEO_FILENAME.srt")
+    video_clip = Path("sample.mp4")
+    family_friendly_audio = Path(uncensored_audio_file).with_name("uncensored.wav")
+    
+    #complete script generated from audio file
 
     raw_transcript = generate_subtitles.transcribe_and_align(
         uncensored_audio_file,
         model_type=whisper_model
-        ) #complete script
+        )
     
-    parent_folder = os.path.dirname(video_output_location)
 
     segments = raw_transcript['segments']
-    segments = audio_utils.mask_swear_segments(swear_word_list,segments)
+
+    segments = audio_utils.mask_swear_segments(
+        swear_word_list,
+        segments
+        )
     
-    srtFilename = os.path.join(parent_folder, f"VIDEO_FILENAME.srt")
+    
     if os.path.exists(srtFilename):
         os.remove(srtFilename)
 
-    for (i,segment) in enumerate(segments):
-        startTime = str(0)+str(timedelta(seconds=int(segment['start'])))+',000'
-        endTime = str(0)+str(timedelta(seconds=int(segment['end'])))+',000'
-        text = segment['text']
-
-        segment = f"{i}\n{startTime} --> {endTime}\n{text[1:] if text[0] == ' ' else text}\n\n"
-        with open(srtFilename, 'a', encoding='utf-8') as srtFile:
-            srtFile.write(segment)
-
+    #generate srt file from segments
+    write_srt_file(segments, srtFilename)
 
     raw_word_segments  = raw_transcript['word_segments']
 
-    masked_script = audio_utils.mask_swear_segments(swear_word_list,raw_word_segments) #adds mask to existing script
+    #adds mask to existing script
+    masked_script = audio_utils.mask_swear_segments(
+        swear_word_list,
+        raw_word_segments
+        )
 
-    swear_segments = text_utils.filter_text_by_list(raw_word_segments,swear_word_list)
+    
+    #find times when the speaker swears
+    swear_segments = text_utils.filter_text_by_list(
+        raw_word_segments,
+        swear_word_list
+        )
     
 
     n_segment = generate_subtitles.segment_text_by_word_length(masked_script,)
-
-    video_clip = Path("sample.mp4")
-
-    family_friendly_audio = Path(uncensored_audio_file).with_name("uncensored.wav")
 
 
     audio_utils.silence_segments(
@@ -118,6 +125,10 @@ def generate_video_with_subtitles(
         video_output_location,
         n_segment
         )
+    
+    #remove temp files
+    os.remove(video_clip)
+    os.remove(family_friendly_audio)
 
 
 def create_next_dir(input_directory: str) -> str:
@@ -146,6 +157,38 @@ def create_next_dir(input_directory: str) -> str:
     os.makedirs(directory_path)
 
     return directory_path
+
+def write_srt_file(segments: List[Dict[str, Any]], srt_filename: str) -> None:
+    """
+    Write an SRT file from a list of video segments.
+
+    This function writes the given segments into an SRT (SubRip Text) file,
+    which is a common format for subtitles. Each segment includes start and end times
+    and the associated text.
+
+    Args:
+        segments: A list of dictionaries representing video segments, where each
+                  dictionary includes 'start', 'end', and 'text' keys.
+        srt_filename: The filename for the resulting SRT file.
+
+    Returns:
+        None
+    """
+
+    for i, segment in enumerate(segments):
+        # Convert start and end times to SRT time format (hh:mm:ss,ms)
+        start_time = str(0)+str(timedelta(seconds=int(segment['start'])))+',000'
+        end_time = str(0)+str(timedelta(seconds=int(segment['end'])))+',000'
+
+        # Get the text associated with this segment
+        text = segment['text']
+
+        # Create the SRT-formatted string for this segment
+        srt_segment = f"{i+1}\n{start_time} --> {end_time}\n{text[1:] if text[0] == ' ' else text}\n\n"
+
+        # Append this segment to the SRT file
+        with open(srt_filename, 'a', encoding='utf-8') as srt_file:
+            srt_file.write(srt_segment)
 
 
 if __name__ == "__main__":
