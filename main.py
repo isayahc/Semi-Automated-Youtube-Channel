@@ -1,20 +1,30 @@
-import os
-
 import argparse
-
-# Third party imports
-from elevenlabs import set_api_key, generate, save
+import os
 
 # Local/application specific imports
 from src.utils import utils
 from src.audio import audio_utils
 
 #TODO:
-# add srt. optional output location
-# handle temp files created by function
 # remove hardcoded file related variables
 
+def validate_args(args):
+    """
+    Validates the file path arguments.
+
+    Args:
+        args: The command line arguments.
+    """
+    if not os.path.isfile(args.audio_link):
+        raise ValueError(f"File not found: {args.audio_link}")
+    if not os.path.isfile(args.vid_link):
+        raise ValueError(f"File not found: {args.vid_link}")
+
+
 def main():
+    """
+    Main function to handle command line arguments and initiate the video generation.
+    """
     parser = argparse.ArgumentParser(description='Generate video with subtitles.')
     parser.add_argument('--audio_link', type=str, required=True,
                         help='Path to the audio file.')
@@ -29,6 +39,10 @@ def main():
     
     args = parser.parse_args()
 
+    # Validate the arguments
+    validate_args(args)
+
+    # If no swear word list is provided, default to the predefined list
     if not args.swear_word_list:
         args.swear_word_list = audio_utils.get_swear_word_list().keys()
 
@@ -43,13 +57,7 @@ def main():
 
     
 if __name__ == '__main__':
-    ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
-    if not ELEVENLABS_API_KEY:
-        print("Error: The ELEVENLABS_API_KEY environment variable is not set.")
-        exit(1)
-    STRING_AUDIO_FILE_LOCATION = os.getenv("STRING_AUDIO_FILE_LOCATION")
-    if not STRING_AUDIO_FILE_LOCATION:
-        print("Error: The STRING_AUDIO_FILE_LOCATION environment variable is not set.")
-        exit(1)
-    set_api_key(ELEVENLABS_API_KEY)
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(f"An error occurred: {e}")

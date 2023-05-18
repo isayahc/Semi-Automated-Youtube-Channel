@@ -1,6 +1,7 @@
 import os
+import sys
+from dotenv import load_dotenv
 from pathlib import Path
-
 
 # Third party imports
 from elevenlabs import set_api_key, generate, save
@@ -54,13 +55,20 @@ def main():
     utils.generate_video_with_subtitles(complete_audio,vid_link,swear_word_list,video_output)
 
 if __name__ == '__main__':
+    # Load .env file
+    load_dotenv()
+
+    # Set API Key from environment variable
     ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
     if not ELEVENLABS_API_KEY:
         print("Error: The ELEVENLABS_API_KEY environment variable is not set.")
-        exit(1)
+        sys.exit(1)
+
+    # Set Audio File Location from environment variable
     STRING_AUDIO_FILE_LOCATION = os.getenv("STRING_AUDIO_FILE_LOCATION")
     if not STRING_AUDIO_FILE_LOCATION:
         print("Error: The STRING_AUDIO_FILE_LOCATION environment variable is not set.")
-        exit(1)
+        sys.exit(1)
+
     set_api_key(ELEVENLABS_API_KEY)
     main()
