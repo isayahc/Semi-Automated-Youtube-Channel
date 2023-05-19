@@ -28,6 +28,7 @@ from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 from google_auth_oauthlib.flow import InstalledAppFlow
 
+
 # The CLIENT_SECRETS_FILE variable specifies the name of a file that contains
 # the OAuth 2.0 information for this application, including its client_id and
 # client_secret. You can acquire an OAuth 2.0 client ID and client secret from
@@ -72,6 +73,23 @@ def get_authenticated_service():
     credentials = flow.run_console()
     return build(API_SERVICE_NAME, API_VERSION, credentials=credentials)
 
+def set_thumbnail(youtube, video_id, thumbnail_path):
+    """
+    Set a thumbnail for a video.
+
+    Args:
+        youtube: An authorized youtube resource object.
+        video_id: The ID of the video to set the thumbnail for.
+        thumbnail_path: The path to the thumbnail image file.
+    """
+    media = MediaFileUpload(thumbnail_path, mimetype='image/jpeg')
+    request = youtube.thumbnails().set(
+        videoId=video_id,
+        media_body=media
+    )
+    response = request.execute()
+
+    print(f'Thumbnail set for video id "{video_id}".')
 
 def initialize_upload(youtube, options):
     """
@@ -94,58 +112,76 @@ def initialize_upload(youtube, options):
         )
     )
 
-    insert_request = youtube.videos().insert(
+    # Check the thumbnail file size
+    if options.thumbnail:
+        thumbnail_size = os.path.getsize(options.thumbnail)
+        if thumbnail_size > 2097152:  # 2MB in bytes
+            print('Thumbnail size exceeds the maximum allowed limit of 2MB.')
+            return
+
+    # Create a MediaFileUpload object for the video file
+    # media = MediaFileUpload(options.file, chunksize=-1, resumable=True)
+
+    # Upload the video and retrieve the video resource
+    video_resource = youtube.videos().insert(
         part=','.join(body.keys()),
         body=body,
-        media_body=MediaFileUpload(options.file, chunksize=-1, resumable=True)
+        # media_body=media
+    ).execute()
+
+    print('Video uploaded successfully.')
+
+    # Add the wait_for_video function here, after the video upload
+    video_id = video_resource.get('id')
+    wait_for_video(youtube, video_id)
+
+    # Use the set_thumbnail function to set the thumbnail
+    if options.thumbnail:
+        set_thumbnail(youtube, video_id, options.thumbnail)
+
+def check_video_status(youtube, video_id):
+    """
+    Check the processing status of a video.
+
+    Args:
+        youtube: An authorized youtube resource object.
+        video_id: The ID of the video to check.
+
+    Returns:
+        True if the video has finished processing, False otherwise.
+    """
+    request = youtube.videos().list(
+        part="processingDetails",
+        id=video_id
     )
+    response = request.execute()
 
-    resumable_upload(insert_request)
+    status = response['items'][0]['processingDetails']['processingStatus']
+    return status == "processed"
 
-
-def retry_on_exceptions(func, retries=MAX_RETRIES):
-    """
-    Retries a function in case of retriable exceptions.
-
-    Args:
-        func: The function to retry.
-        retries: The number of retries to attempt. Defaults to MAX_RETRIES.
-    """
-    retry = 0
-    while retry <= retries:
-        try:
-            return func()
-        except RETRIABLE_EXCEPTIONS as e:
-            print(f'Retriable error occurred: {e}')
-            retry += 1
-            sleep_seconds = random.random() * (2 ** retry)
-            print(f'Sleeping {sleep_seconds} seconds and then retrying...')
-            time.sleep(sleep_seconds)
-    raise Exception('Maximum retry attempts exhausted')
-
-
-def resumable_upload(request):
-    """
-    Performs a resumable upload of a file.
-
-    Args:
-        request: The media upload request to perform.
-    """
-
-    def upload_chunk():
-        print('Uploading file...')
-        status, response = request.next_chunk()
-        if 'id' in response:
-            print(f'Video id "{response["id"]}" was successfully uploaded.')
+# Continuously check the status of the video
+def wait_for_video(youtube, video_id):
+    while True:
+        if check_video_status(youtube, video_id):
+            print("Video processing finished.")
+            break
         else:
-            print(f'The upload failed with an unexpected response: {response}')
-            return None
+            print("Video still processing, waiting...")
+            time.sleep(10)  # wait for 10 seconds before checking again
 
-        return response
 
-    # Invoke the upload_chunk function
-    return upload_chunk()
 
+
+def validate_arguments(options):
+    """
+    Validate the command line arguments.
+    """
+    if options.thumbnail:
+        thumbnail_size = os.path.getsize(options.thumbnail)
+        if thumbnail_size > 2097152:  # 2MB in bytes
+            print('Thumbnail size exceeds the maximum allowed limit of 2MB.')
+            return False
+    return True
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -160,7 +196,11 @@ if __name__ == '__main__':
                         default='')
     parser.add_argument('--privacyStatus', choices=VALID_PRIVACY_STATUSES,
                         default='private', help='Video privacy status.')
+    parser.add_argument('--thumbnail', help='Path to thumbnail image file')
     args = parser.parse_args()
+
+    if not validate_arguments(args):
+        raise ValueError('Invalid arguments. Please check the provided values.')
 
     youtube = get_authenticated_service()
     try:
