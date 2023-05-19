@@ -11,6 +11,7 @@ A tool to semi-automate various tasks related to managing a YouTube channel, all
 - add audio overlay to a video file
 - add subtitles to video file based on the speech in the video (using whisperx)
 - Has the ablity to make simple youtube thumbnails based on popular youtube reddit channels
+- A user is able to upload videos via YouTube Data API
 
 ## Installation
 
@@ -72,7 +73,8 @@ The script will stop execution and print an error message if there's an issue, s
 ## Testing
 
 to run test input the command
-```
+
+```bash
 python -m pytest
 ```
 
