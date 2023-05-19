@@ -66,6 +66,44 @@ To save a subtitle file, add the `--srtFilename` argument:
 python main.py --audio_link /path/to/audio/file --vid_link /path/to/video/file --swear_word_list /path/to/swear_word_list.txt --video_output /path/to/output/file --srtFilename /path/to/subtitle/file
 ```
 
+## Using the YouTube Video Upload Python Script
+
+This `video_upload.py` script provides a command-line interface (CLI) tool to upload videos to YouTube using the YouTube Data API. The script handles authentication, video upload, and retry logic for failed uploads. Here are instructions on how to use it.
+
+### Pre-requisites
+
+Before you use this script, ensure that you have the following:
+
+
+1. **OAuth 2.0 client ID and client secret:** You need to specify a `client_secret.json` file with your OAuth 2.0 client ID and client secret. You can get these from the Google Cloud Console. Ensure that you have enabled the YouTube Data API for your project.
+
+### Running the Script
+
+The script uses command line arguments to specify the details of the video to be uploaded. Here is the usage of the script:
+
+```shell
+python video_upload.py --file FILE_PATH --title TITLE --description DESCRIPTION --category CATEGORY_ID --keywords "keyword1,keyword2" --privacyStatus PRIVACY_STATUS
+```
+
+Replace the capitalized words with your own details:
+
+- `FILE_PATH`: This is the full path to the video file to upload.
+- `TITLE`: The title of the video.
+- `DESCRIPTION`: The description of the video.
+- `CATEGORY_ID`: The numeric category ID of the video. See [here](https://developers.google.com/youtube/v3/docs/videoCategories/list) for a list of category IDs.
+- `keyword1,keyword2`: The keywords for the video, separated by commas.
+- `PRIVACY_STATUS`: The privacy status of the video. Choose from 'public', 'private', or 'unlisted'.
+
+For example:
+
+```shell
+python video_upload.py --file /path/to/video.mp4 --title "Test Video" --description "This is a test video" --category 27 --keywords "test,video" --privacyStatus private
+```
+
+This command uploads the video located at `/path/to/video.mp4` with the title "Test Video", description "This is a test video", category 27, keywords "test" and "video", and privacy status set to 'private'.
+
+Please note that the script will prompt you to authorize the request in your web browser when you run it for the first time. It is a one-time process, and the script will store the authorization credentials for future runs.
+
 ### Exception Handling
 
 The script will stop execution and print an error message if there's an issue, such as a file not being found at the specified path.
