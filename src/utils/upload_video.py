@@ -131,6 +131,7 @@ def resumable_upload(request):
     Args:
         request: The media upload request to perform.
     """
+
     def upload_chunk():
         print('Uploading file...')
         status, response = request.next_chunk()
@@ -141,6 +142,9 @@ def resumable_upload(request):
             return None
 
         return response
+
+    # Invoke the upload_chunk function
+    return upload_chunk()
 
 
 if __name__ == '__main__':

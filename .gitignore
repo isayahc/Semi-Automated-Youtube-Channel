@@ -1,6 +1,6 @@
 # Ignore files and directories for Git
 .env
-client_secrets.json
+client_secret.json
 /venv
 
 # Ignore directories not meant for GitHub
