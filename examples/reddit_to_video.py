@@ -1,5 +1,11 @@
+"""
+This module fetches posts from a subreddit, converts one of the posts into audio,
+then generates a video with subtitles from the audio and a sample video.
+"""
+
 import os
 import sys
+import logging
 from dotenv import load_dotenv
 from pathlib import Path
 
@@ -8,67 +14,83 @@ from elevenlabs import set_api_key, generate, save
 
 # Local/application specific imports
 from src.utils import reddit_api, utils
-from src.audio import  audio_utils
+from src.audio import audio_utils
 
-
-
-def main():
-    #gets the data from a selected subreddit
-    #queries the 3 post popular post of a given subreddit
-    subreddit = 'dndstories'
-    posts_dict = reddit_api.fetch_reddit_posts(subreddit)
-
-    # chooses the first reddit story in the query
-    first_story = posts_dict[-1]
-
-    #turns the selected reddit story into a simple youtube script
-    script_first_story = reddit_api.turn_post_into_script(
-        first_story['body'],
-        first_story['title']
-        )
+def check_environment_variables():
+    """
+    Checks if necessary environment variables are set.
     
+    This function gets the 'ELEVENLABS_API_KEY' and 'STRING_AUDIO_FILE_LOCATION' 
+    from the environment variables and checks if they are set.
     
-    # will create a directory in a given location story_n
-    # where n is the number of directories with the name story
-    audio_directory = utils.create_next_dir(STRING_AUDIO_FILE_LOCATION)
-
-    current_directory = os.getcwd()
-    # Create the directory in the current working directory
-    directory_path = os.path.join(current_directory, Path(audio_directory))
-
-    complete_audio = os.path.join(audio_directory,f"story_part_0.wav")
-
-    swear_word_list = [*audio_utils.get_swear_word_list().keys()]
-
-
-    audio = generate(
-        text=script_first_story,
-        voice="Bella",
-        model="eleven_monolingual_v1"
-        )
-    save(audio, complete_audio)
-    
-    vid_link = r'sample_video.mp4'
-
-    video_output = r"sample_0.mp4"
-
-    utils.generate_video_with_subtitles(complete_audio,vid_link,swear_word_list,video_output)
-
-if __name__ == '__main__':
-    # Load .env file
-    load_dotenv()
-
-    # Set API Key from environment variable
+    Returns:
+        ELEVENLABS_API_KEY (str): The API key for elevenlabs.
+        STRING_AUDIO_FILE_LOCATION (str): The location to store the audio file.
+        
+    Raises:
+        SystemExit: If the environment variables are not set.
+    """
     ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
     if not ELEVENLABS_API_KEY:
-        print("Error: The ELEVENLABS_API_KEY environment variable is not set.")
+        logging.error("The ELEVENLABS_API_KEY environment variable is not set.")
         sys.exit(1)
 
-    # Set Audio File Location from environment variable
     STRING_AUDIO_FILE_LOCATION = os.getenv("STRING_AUDIO_FILE_LOCATION")
     if not STRING_AUDIO_FILE_LOCATION:
-        print("Error: The STRING_AUDIO_FILE_LOCATION environment variable is not set.")
+        logging.error("The STRING_AUDIO_FILE_LOCATION environment variable is not set.")
         sys.exit(1)
 
+    return ELEVENLABS_API_KEY, STRING_AUDIO_FILE_LOCATION
+
+# This function fetches posts from the specified subreddit
+def fetch_reddit_posts(subreddit):
+    return reddit_api.fetch_reddit_posts(subreddit)
+
+# This function creates a directory in the specified location to store the audio file
+def create_audio_directory(audio_file_location):
+    audio_directory = utils.create_next_dir(audio_file_location)
+    current_directory = os.getcwd()
+    directory_path = os.path.join(current_directory, Path(audio_directory))
+    return directory_path
+
+# This function generates an audio file from the specified script using the Eleven Labs API
+def generate_audio(script, voice, model):
+    return generate(text=script, voice=voice, model=model)
+
+def main(api_key, audio_file_location):
+    subreddit = 'dndstories'
+
+    # Fetch posts from the subreddit
+    posts_dict = fetch_reddit_posts(subreddit)
+    first_story = posts_dict[-1]
+
+    # Convert the first post into a script
+    script_first_story = reddit_api.turn_post_into_script(
+        first_story['body'], first_story['title'])
+
+    # Create a directory to store the audio file
+    directory_path = create_audio_directory(audio_file_location)
+    complete_audio_path = os.path.join(directory_path, "story_part_0.wav")
+
+    # Fetch the list of swear words to filter
+    swear_word_list = [*audio_utils.get_swear_word_list().keys()]
+
+    # Generate the audio from the script
+    audio = generate_audio(script_first_story, voice="Bella", model="eleven_monolingual_v1")
+    save(audio, complete_audio_path)
+
+    input_video_file = r'sample_video.mp4'
+    output_video_file = r"sample_0.mp4"
+
+    # Generate the final video with subtitles, filtering out any swear words
+    utils.generate_video_with_subtitles(
+        complete_audio_path, input_video_file, swear_word_list, output_video_file)
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+    load_dotenv()
+
+    # Check environment variables and proceed if all necessary variables are set
+    ELEVENLABS_API_KEY, STRING_AUDIO_FILE_LOCATION = check_environment_variables()
     set_api_key(ELEVENLABS_API_KEY)
-    main()
+    main(ELEVENLABS_API_KEY, STRING_AUDIO_FILE_LOCATION)
