@@ -11,26 +11,17 @@ SCOPES = ['https://www.googleapis.com/auth/youtube.upload']
 API_SERVICE_NAME = 'youtube'
 API_VERSION = 'v3'
 
-
 def get_authenticated_service() -> build:
-    """
-    Handle OAuth2 authentication.
-    Returns an authenticated service that can be used to interact with the YouTube API.
-    """
     flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS_FILE, SCOPES)
     credentials = flow.run_console()
     return build(API_SERVICE_NAME, API_VERSION, credentials=credentials)
 
-
 def initialize_upload(youtube: build, options: Namespace) -> None:
-    """
-    Initialize the video upload.
-    """
     tags = None
     if options.keywords:
         tags = options.keywords.split(',')
 
-    body = dict(
+    body=dict(
         snippet=dict(
             title=options.title,
             description=options.description,
@@ -38,7 +29,8 @@ def initialize_upload(youtube: build, options: Namespace) -> None:
             categoryId=options.category
         ),
         status=dict(
-            privacyStatus=options.privacyStatus
+            privacyStatus=options.privacyStatus,
+            madeForKids=options.madeForKids  # Added 'madeForKids' field
         )
     )
 
@@ -47,15 +39,10 @@ def initialize_upload(youtube: build, options: Namespace) -> None:
         body=body,
         media_body=MediaFileUpload(options.file, chunksize=-1, resumable=True)
     )
-
-    resumable_upload(youtube, insert_request, options)  # Add 'youtube' as a parameter
-
-
+    
+    resumable_upload(youtube, insert_request, options)
 
 def resumable_upload(youtube: build, insert_request: object, options: Namespace) -> None:
-    """
-    Upload a file and track its progress.
-    """
     response = None
     while response is None:
         status, response = insert_request.next_chunk()
@@ -63,17 +50,11 @@ def resumable_upload(youtube: build, insert_request: object, options: Namespace)
             print(f"Video id {response['id']} was successfully uploaded.")
             set_thumbnail(youtube, options, response['id'])
 
-
-
 def set_thumbnail(youtube: build, options: Namespace, video_id: str) -> None:
-    """
-    Set the thumbnail of the video after it has been uploaded.
-    """
     youtube.thumbnails().set(
         videoId=video_id,
         media_body=MediaFileUpload(options.thumbnail)
     ).execute()
-
 
 def main():
     parser = argparse.ArgumentParser()
@@ -84,6 +65,7 @@ def main():
     parser.add_argument('--keywords', help='Video keywords, comma separated', default='')
     parser.add_argument('--privacyStatus', choices=['public', 'private', 'unlisted'], default='public', help='Video privacy status.')
     parser.add_argument('--thumbnail', help='Thumbnail image file', default='')
+    parser.add_argument('--madeForKids', type=bool, default=False, help='Made for kids field.')  # Added 'madeForKids' argument
     args = parser.parse_args()
 
     youtube = get_authenticated_service()
@@ -91,7 +73,6 @@ def main():
         initialize_upload(youtube, args)
     except HttpError as e:
         print(f'An HTTP error {e.resp.status} occurred:\n{e.content}')
-
 
 if __name__ == '__main__':
     main()
