@@ -20,6 +20,7 @@ import httplib2
 import os
 import random
 import time
+from dotenv import load_dotenv
 
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
@@ -64,6 +65,97 @@ API_SERVICE_NAME = 'youtube'
 API_VERSION = 'v3'
 
 VALID_PRIVACY_STATUSES = ('public', 'private', 'unlisted')
+
+load_dotenv()
+
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+
+def get_my_uploaded_videos_details(youtube, max_results=25, part="snippet,contentDetails"):
+    """
+    Retrieves and returns the details of videos on the authenticated user's YouTube channel.
+
+    Parameters:
+    youtube: An authorized YouTube resource object.
+    max_results: The maximum number of results to return (default 25).
+    part: The part parameter specifies the video resource properties that the API response will include (default "snippet,contentDetails").
+
+    Returns:
+    A list of dictionaries containing details of each video.
+    """
+    try:
+        # Get the channel data for the authenticated user
+        channels_response = youtube.channels().list(mine=True, part='contentDetails').execute()
+    except Exception as e:
+        print(f"Failed to get channel data: {e}")
+        return None
+
+    cleaned_data = []
+    
+    # Get the ID of the 'uploads' playlist
+    for channel in channels_response['items']:
+        try:
+            uploads_playlist_id = channel['contentDetails']['relatedPlaylists']['uploads']
+
+            # Get the playlist items
+            playlistitems_response = youtube.playlistItems().list(
+                part=part,
+                maxResults=max_results,
+                playlistId=uploads_playlist_id
+            ).execute()
+
+            for item in playlistitems_response['items']:
+                video_data = clean_video_data(item)
+                cleaned_data.append(video_data)
+                
+        except Exception as e:
+            print(f"Failed to get playlist items: {e}")
+
+    return cleaned_data
+
+
+def clean_video_data(item):
+    """
+    Cleans raw video data.
+
+    Parameters:
+    item: A dictionary containing raw video data.
+
+    Returns:
+    A dictionary containing cleaned video data.
+    """
+    video_data = {}
+    video_data['video_id'] = item['contentDetails']['videoId']
+    video_data['title'] = item['snippet']['title']
+    video_data['description'] = item['snippet']['description']
+    video_data['published_at'] = item['snippet']['publishedAt']
+    video_data['thumbnails'] = item['snippet']['thumbnails']
+
+    return video_data
+
+def get_most_recent_video(youtube, max_results=25, part="snippet,contentDetails"):
+    """
+    Retrieves and returns the details of the most recently uploaded video on the authenticated user's YouTube channel.
+
+    Parameters:
+    youtube: An authorized YouTube resource object.
+    max_results: The maximum number of results to return (default 25).
+    part: The part parameter specifies the video resource properties that the API response will include (default "snippet,contentDetails").
+
+    Returns:
+    A dictionary containing details of the most recently uploaded video, or None if no videos were found.
+    """
+    cleaned_data = get_my_uploaded_videos_details(youtube, max_results, part)
+
+    if not cleaned_data:
+        print("No videos found.")
+        return None
+
+    # Sort the cleaned data by the 'published_at' key in descending order
+    cleaned_data.sort(key=lambda x: x['published_at'], reverse=True)
+
+    # Return the first item, which is the most recently uploaded video
+    return cleaned_data[0]
+
 
 def get_authenticated_service():
     """
@@ -113,32 +205,49 @@ def initialize_upload(youtube, options):
         )
     )
 
-    # Check the thumbnail file size
-    if options.thumbnail:
-        thumbnail_size = os.path.getsize(options.thumbnail)
-        if thumbnail_size > 2097152:  # 2MB in bytes
-            print('Thumbnail size exceeds the maximum allowed limit of 2MB.')
-            return
-
-    # Create a MediaFileUpload object for the video file
-    # media = MediaFileUpload(options.file, chunksize=-1, resumable=True)
-
-    # Upload the video and retrieve the video resource
-    video_resource = youtube.videos().insert(
+    insert_request = youtube.videos().insert(
         part=','.join(body.keys()),
         body=body,
-        # media_body=media
-    ).execute()
+        media_body=MediaFileUpload(options.file, chunksize=-1, resumable=True)
+    )
+
+    resumable_upload(insert_request)
 
     print('Video uploaded successfully.')
 
-    # Add the wait_for_video function here, after the video upload
-    video_id = video_resource.get('id')
-    wait_for_video(youtube, video_id)
-
     # Use the set_thumbnail function to set the thumbnail
     if options.thumbnail:
-        set_thumbnail(youtube, video_id, options.thumbnail)
+        
+
+        print("uploading image")
+        # get_most_recent_video(youtube)
+        most_recent_video = get_most_recent_video(youtube)
+
+        # may be problematic but it assumes the most recently 
+        # uploaded video is the video uploaded in this function
+        most_recent_video_id = most_recent_video['video_id']
+        set_thumbnail(youtube, most_recent_video_id , options.thumbnail)
+
+    
+
+
+def resumable_upload(request):
+    """
+    Performs a resumable upload of a file.
+
+    Args:
+        request: The media upload request to perform.
+    """
+    def upload_chunk():
+        print('Uploading file...')
+        status, response = request.next_chunk()
+        if 'id' in response:
+            print(f'Video id "{response["id"]}" was successfully uploaded.')
+        else:
+            print(f'The upload failed with an unexpected response: {response}')
+            return None
+
+        return response
 
 def check_video_status(youtube, video_id):
     """
@@ -171,6 +280,29 @@ def wait_for_video(youtube, video_id):
             time.sleep(10)  # wait for 10 seconds before checking again
 
 
+def get_most_recent_video(youtube, max_results=25, part="snippet,contentDetails"):
+    """
+    Retrieves and returns the details of the most recently uploaded video on the authenticated user's YouTube channel.
+
+    Parameters:
+    youtube: An authorized YouTube resource object.
+    max_results: The maximum number of results to return (default 25).
+    part: The part parameter specifies the video resource properties that the API response will include (default "snippet,contentDetails").
+
+    Returns:
+    A dictionary containing details of the most recently uploaded video, or None if no videos were found.
+    """
+    cleaned_data = get_my_uploaded_videos_details(youtube, max_results, part)
+
+    if not cleaned_data:
+        print("No videos found.")
+        return None
+
+    # Sort the cleaned data by the 'published_at' key in descending order
+    cleaned_data.sort(key=lambda x: x['published_at'], reverse=True)
+
+    # Return the first item, which is the most recently uploaded video
+    return cleaned_data[0]
 
 
 def validate_arguments(options):
