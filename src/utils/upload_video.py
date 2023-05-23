@@ -12,11 +12,24 @@ API_SERVICE_NAME = 'youtube'
 API_VERSION = 'v3'
 
 def get_authenticated_service() -> build:
+    """
+    Authenticate the user using OAuth2.
+    
+    Returns:
+        The authenticated service that can be used to interact with the YouTube API.
+    """
     flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS_FILE, SCOPES)
     credentials = flow.run_console()
     return build(API_SERVICE_NAME, API_VERSION, credentials=credentials)
 
 def initialize_upload(youtube: build, options: Namespace) -> None:
+    """
+    Initialize the video upload to YouTube.
+    
+    Parameters:
+        youtube (build): The authenticated YouTube API service.
+        options (Namespace): Command line arguments.
+    """
     tags = None
     if options.keywords:
         tags = options.keywords.split(',')
@@ -43,6 +56,14 @@ def initialize_upload(youtube: build, options: Namespace) -> None:
     resumable_upload(youtube, insert_request, options)
 
 def resumable_upload(youtube: build, insert_request: object, options: Namespace) -> None:
+    """
+    Upload the video file to YouTube and track its progress.
+    
+    Parameters:
+        youtube (build): The authenticated YouTube API service.
+        insert_request (object): The insert request object.
+        options (Namespace): Command line arguments.
+    """
     response = None
     while response is None:
         status, response = insert_request.next_chunk()
@@ -51,12 +72,23 @@ def resumable_upload(youtube: build, insert_request: object, options: Namespace)
             set_thumbnail(youtube, options, response['id'])
 
 def set_thumbnail(youtube: build, options: Namespace, video_id: str) -> None:
+    """
+    Set the thumbnail of the uploaded video.
+    
+    Parameters:
+        youtube (build): The authenticated YouTube API service.
+        options (Namespace): Command line arguments.
+        video_id (str): The ID of the uploaded video.
+    """
     youtube.thumbnails().set(
         videoId=video_id,
         media_body=MediaFileUpload(options.thumbnail)
     ).execute()
 
 def main():
+    """
+    Parse command line arguments and upload a video to YouTube.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('--file', required=True, help='Video file to upload')
     parser.add_argument('--title', help='Video title', default='Test Title')
