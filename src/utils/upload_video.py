@@ -1,10 +1,14 @@
+from argparse import Namespace
+import argparse
+import os
+
 from googleapiclient.http import MediaFileUpload
 from googleapiclient.errors import HttpError
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-from argparse import Namespace
-import argparse
-import os
+
+from moviepy.editor import VideoFileClip
+
 
 CLIENT_SECRETS_FILE = "client_secret.json"
 SCOPES = ['https://www.googleapis.com/auth/youtube.upload']
@@ -22,6 +26,28 @@ def get_authenticated_service() -> build:
     credentials = flow.run_console()
     return build(API_SERVICE_NAME, API_VERSION, credentials=credentials)
 
+
+def validate_shorts(options: Namespace) -> None:
+    """
+    Validate that the video file meets the requirements for YouTube Shorts.
+
+    Parameters:
+        options (Namespace): Command line arguments.
+    """
+    # Check the video format and duration
+    video = VideoFileClip(options.file)
+    width, height = video.size
+    duration = video.duration
+
+    # Check if video is vertical (aspect ratio of 9:16)
+    if width / height != 9 / 16:
+        raise ValueError("Video is not in the correct aspect ratio for YouTube Shorts. It must be a vertical video (aspect ratio 9:16).")
+
+    # Check if video is no longer than 60 seconds
+    if duration > 60:
+        raise ValueError("Video is too long for YouTube Shorts. It must be 60 seconds or less.")
+
+
 def initialize_upload(youtube: build, options: Namespace) -> None:
     """
     Initialize the video upload to YouTube.
@@ -34,16 +60,21 @@ def initialize_upload(youtube: build, options: Namespace) -> None:
     if options.keywords:
         tags = options.keywords.split(',')
 
+    # Check if the video is a YouTube short and append "#Shorts" to the title
+    title = options.title
+    if options.youtubeShort:
+        title += " #Shorts"
+
     body=dict(
         snippet=dict(
-            title=options.title,
+            title=title,
             description=options.description,
             tags=tags,
             categoryId=options.category
         ),
         status=dict(
             privacyStatus=options.privacyStatus,
-            madeForKids=options.madeForKids  # Added 'madeForKids' field
+            madeForKids=options.madeForKids  
         )
     )
 
@@ -97,8 +128,12 @@ def main():
     parser.add_argument('--keywords', help='Video keywords, comma separated', default='')
     parser.add_argument('--privacyStatus', choices=['public', 'private', 'unlisted'], default='public', help='Video privacy status.')
     parser.add_argument('--thumbnail', help='Thumbnail image file', default='')
-    parser.add_argument('--madeForKids', type=bool, default=False, help='Made for kids field.')  # Added 'madeForKids' argument
+    parser.add_argument('--madeForKids', type=bool, default=False, help='Made for kids field.')
+    parser.add_argument('--youtubeShort', type=bool, default=False, help='Is this a YouTube short?')  # Added 'youtubeShort' argument
     args = parser.parse_args()
+
+    if args.youtubeShort:
+        validate_shorts(args)
 
     youtube = get_authenticated_service()
     try:
