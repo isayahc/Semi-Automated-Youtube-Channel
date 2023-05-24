@@ -1,5 +1,7 @@
 # Semi-Automated-Youtube-Channel
 
+---
+
 ## Goal
 
 A tool to semi-automate various tasks related to managing a YouTube channel, allowing content creators to streamline their workflow and improve productivity.
@@ -44,7 +46,7 @@ The script accepts five command-line arguments:
 4. `--video_output`: The path to save the generated censored video. (required)
 5. `--srtFilename`: The path to save the generated subtitle (srt) file. If not provided, no subtitle file will be saved. (optional)
 
-### Running the Script
+### Running main.py
 
 You can run the script from the command line like this:
 
@@ -66,6 +68,8 @@ To save a subtitle file, add the `--srtFilename` argument:
 python main.py --audio_link /path/to/audio/file --vid_link /path/to/video/file --swear_word_list /path/to/swear_word_list.txt --video_output /path/to/output/file --srtFilename /path/to/subtitle/file
 ```
 
+---
+
 ## Using the YouTube Video Upload Python Script
 
 This `video_upload.py` script provides a command-line interface (CLI) tool to upload videos to YouTube using the YouTube Data API. The script handles authentication, video upload, and retry logic for failed uploads. Here are instructions on how to use it.
@@ -74,15 +78,14 @@ This `video_upload.py` script provides a command-line interface (CLI) tool to up
 
 Before you use this script, ensure that you have the following:
 
-
 1. **OAuth 2.0 client ID and client secret:** You need to specify a `client_secret.json` file with your OAuth 2.0 client ID and client secret. You can get these from the Google Cloud Console. Ensure that you have enabled the YouTube Data API for your project.
 
-### Running the Script
+### Running video_upload.py
 
 The script uses command line arguments to specify the details of the video to be uploaded. Here is the usage of the script:
 
 ```shell
-python video_upload.py --file FILE_PATH --title TITLE --description DESCRIPTION --category CATEGORY_ID --keywords "keyword1,keyword2" --privacyStatus PRIVACY_STATUS
+python video_upload.py --file FILE_PATH --title TITLE --description DESCRIPTION --category CATEGORY_ID --keywords "keyword1,keyword2" --privacyStatus PRIVACY_STATUS --thumbnail THUMBNAIL_PATH --madeForKids BOOLEAN_VALUE --youtubeShort BOOLEAN_VALUE
 ```
 
 Replace the capitalized words with your own details:
@@ -93,14 +96,17 @@ Replace the capitalized words with your own details:
 - `CATEGORY_ID`: The numeric category ID of the video. See [here](https://developers.google.com/youtube/v3/docs/videoCategories/list) for a list of category IDs.
 - `keyword1,keyword2`: The keywords for the video, separated by commas.
 - `PRIVACY_STATUS`: The privacy status of the video. Choose from 'public', 'private', or 'unlisted'.
+- `THUMBNAIL_PATH`: The full path to the thumbnail image file.
+- `BOOLEAN_VALUE` for `--madeForKids`: Specify if the video is made for kids. Use True or False.
+- `BOOLEAN_VALUE` for `--youtubeShort`: Specify if the video is a YouTube short. Use True or False.
 
 For example:
 
 ```shell
-python video_upload.py --file /path/to/video.mp4 --title "Test Video" --description "This is a test video" --category 27 --keywords "test,video" --privacyStatus private
+python video_upload.py --file /path/to/video.mp4 --title "Test Video" --description "This is a test video" --category 27 --keywords "test,video" --privacyStatus private --thumbnail /path/to/thumbnail.jpg --madeForKids False --youtubeShort False
 ```
 
-This command uploads the video located at `/path/to/video.mp4` with the title "Test Video", description "This is a test video", category 27, keywords "test" and "video", and privacy status set to 'private'.
+This command uploads the video located at `/path/to/video.mp4` with the title "Test Video", description "This is a test video", category 27, keywords "test" and "video", privacy status set to 'private', thumbnail image from `/path/to/thumbnail.jpg`, and specifies that the video is not made for kids and is not a YouTube short.
 
 Please note that the script will prompt you to authorize the request in your web browser when you run it for the first time. It is a one-time process, and the script will store the authorization credentials for future runs.
 
