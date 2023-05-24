@@ -126,10 +126,10 @@ def main():
     parser.add_argument('--description', help='Video description', default='Test Description')
     parser.add_argument('--category', default='27', help='Numeric video category. See https://developers.google.com/youtube/v3/docs/videoCategories/list')
     parser.add_argument('--keywords', help='Video keywords, comma separated', default='')
-    parser.add_argument('--privacyStatus', choices=['public', 'private', 'unlisted'], default='public', help='Video privacy status.')
+    parser.add_argument('--privacyStatus', choices=['public', 'private', 'unlisted'], default='private', help='Video privacy status.')
     parser.add_argument('--thumbnail', help='Thumbnail image file', default='')
     parser.add_argument('--madeForKids', type=bool, default=False, help='Made for kids field.')
-    parser.add_argument('--youtubeShort', type=bool, default=False, help='Is this a YouTube short?')  # Added 'youtubeShort' argument
+    parser.add_argument('--youtubeShort', type=bool, default=False, help='Is this a YouTube short, if so it must have a aspect ratio of 9:16?')  # Added 'youtubeShort' argument
     args = parser.parse_args()
 
     if args.youtubeShort:
