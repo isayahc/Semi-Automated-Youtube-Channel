@@ -28,7 +28,7 @@ def get_video_engagement_metrics(video_id: str, api_key: str):
 
     return engagement_metrics
 
-def get_video_comments(video_id: str, api_key: str, max_results: int = 20, include_replies: bool = True) -> list:
+def get_video_comments(video_id: str, api_key: str, max_results: int = 20, include_replies: bool = True, order: str = 'relevance') -> list:
     """
     Fetch comments for a specific YouTube video.
 
@@ -37,6 +37,9 @@ def get_video_comments(video_id: str, api_key: str, max_results: int = 20, inclu
         api_key (str): The Google API key.
         max_results (int, optional): Maximum number of comments to return. Defaults to 20.
         include_replies (bool, optional): If True, includes replies to comments. Defaults to True.
+        order (str, optional): The order in which to retrieve comments.
+            Possible values: 'relevance', 'time', 'rating', 'videoLikes', 'videoRelevance'.
+            Defaults to 'relevance'.
 
     Returns:
         list: A list containing comments, booleans indicating if it is a reply, and the comment's publish datetime.
@@ -44,12 +47,13 @@ def get_video_comments(video_id: str, api_key: str, max_results: int = 20, inclu
     # Build the YouTube API client
     youtube = build('youtube', 'v3', developerKey=api_key)
 
-    # Fetch comments for the video
+    # Fetch comments for the video with the specified order
     response = youtube.commentThreads().list(
         part='snippet,replies',
         videoId=video_id,
         textFormat='plainText',
-        maxResults=max_results
+        maxResults=max_results,
+        order=order
     ).execute()
 
     # Extract comments from the response
@@ -76,6 +80,7 @@ def main():
     group.add_argument('--metrics', action='store_true', help='Get engagement metrics')
     group.add_argument('--comments', type=int, nargs='?', const=20, help='Get comments')
     parser.add_argument('--no-replies', action='store_true', help='Exclude replies to comments')
+    parser.add_argument('--order', type=str, choices=['relevance', 'time', 'rating', 'videoLikes', 'videoRelevance'], default='relevance', help='Order of comments')
     parser.add_argument('video_id', type=str, help='The ID of the YouTube video')
 
     # Parse command-line arguments
@@ -87,7 +92,7 @@ def main():
         print(engagement_metrics)
     elif args.comments is not None:
         # Get and print comments
-        comments = get_video_comments(args.video_id, api_key, args.comments, not args.no_replies)
+        comments = get_video_comments(args.video_id, api_key, args.comments, not args.no_replies, args.order)
         for comment, is_reply, datetime in comments:
             print(f'{"Reply" if is_reply else "Comment"} ({datetime}): {comment}')
 
