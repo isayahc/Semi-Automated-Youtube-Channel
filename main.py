@@ -1,32 +1,67 @@
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.cluster import KMeans
+import argparse
+import os
 
-# Assume descriptions contains the text data of the video descriptions
-descriptions = ["Python tutorial", "How to bake a cake", "Machine learning basics", "..."]
+# Local/application specific imports
+from src.utils import utils
+from src.audio import audio_utils
 
-# Number of clusters
-num_clusters = 3
+#TODO:
+# remove hardcoded file related variables
 
-# Vectorize the descriptions using TF-IDF
-vectorizer = TfidfVectorizer(max_features=10000)
-tfidf = vectorizer.fit_transform(descriptions)
+def validate_args(args):
+    """
+    Validates the file path arguments.
 
-# Perform KMeans clustering
-kmeans = KMeans(n_clusters=num_clusters)
-kmeans.fit(tfidf)
+    Args:
+        args: The command line arguments.
+    """
+    if not os.path.isfile(args.audio_link):
+        raise ValueError(f"File not found: {args.audio_link}")
+    if not os.path.isfile(args.vid_link):
+        raise ValueError(f"File not found: {args.vid_link}")
 
-# For each cluster, print the top keywords
-for i in range(num_clusters):
-    print(f"Niche #{i + 1}:")
+
+def main():
+    """
+    Main function to handle command line arguments and initiate the video generation.
+    """
+    parser = argparse.ArgumentParser(description='Generate video with subtitles.')
+    parser.add_argument('--audio_link', type=str, required=True,
+                        help='Path to the audio file.')
+    parser.add_argument('--vid_link', type=str, required=True,
+                        help='Path to the video file.')
+    parser.add_argument('--swear_word_list', type=str, required=False, default="",
+                        help='Path to the text file with a list of swear words to be filtered out.')
+    parser.add_argument('--video_output', type=str, required=True,
+                        help='Path for the output video file.')
+    parser.add_argument('--srtFilename', type=str, required=False, default="",
+                        help='Path for the subtitle file. If not provided, no subtitle file will be saved.')
     
-    # Get the descriptions in this cluster
-    cluster_descriptions = tfidf[kmeans.labels_ == i]
-    
-    # Sum the TF-IDF scores for each keyword
-    sum_tfidf = cluster_descriptions.sum(axis=0)
+    args = parser.parse_args()
 
-    # Get the top 10 keywords in this cluster
-    top_keywords_indices = sum_tfidf.argsort()[0, ::-1][:10]
-    top_keywords = [vectorizer.get_feature_names_out()[index] for index in top_keywords_indices.flat]
+    # Validate the arguments
+    validate_args(args)
+
+    # If no swear word list is provided, default to the predefined list
+    if args.swear_word_list:
+        with open(args.swear_word_list, 'r') as file:
+            args.swear_word_list = [word.strip() for word in file.readlines()]
+    else:
+        args.swear_word_list = audio_utils.get_swear_word_list().keys()
+
+
+    utils.generate_video_with_subtitles(
+        args.audio_link, 
+        args.vid_link, 
+        args.swear_word_list, 
+        args.video_output,
+        args.srtFilename
+        )
+
+
     
-    print(top_keywords)
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as e:
+        print(f"An error occurred: {e}")
