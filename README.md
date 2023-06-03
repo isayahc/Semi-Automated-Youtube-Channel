@@ -40,27 +40,26 @@ Follow these steps to set up the project locally:
 ## API Keys
 
 ```python
-# Optional and may be removed soon
-PROJECT_CX=
+# Configuration for storing assets
+STRING_AUDIO_FILE_LOCATION=assets/audio/posts
+SWEAR_WORD_LIST_FILE_LOCATION_FILE_LOCATION=assets/text/swear_words.csv
 
+# API Keys
 # Needed for working with google
 GOOGLE_API_KEY=
 
 # Needed for text-to-speech
 ELEVENLABS_API_KEY=
 
-# Configuration for storing assets
-STRING_AUDIO_FILE_LOCATION=assets/audio/posts
-SWEAR_WORD_LIST_FILE_LOCATION_FILE_LOCATION=assets/text/swear_words.csv
-
 # Optional if you want to use reddit
 REDDIT_CLIENT_ID=
 REDDIT_CLIENT_SECRET=
 
-
-# Optional PLAYHT will probably be removed soon
+# Optional and will probably be removed soon
 PLAYHT_API_KEY=
 PLAYHT_API_USER_ID=
+
+PROJECT_CX=
 
 
 ```
