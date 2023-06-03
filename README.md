@@ -19,11 +19,22 @@ A tool to semi-automate various tasks related to managing a YouTube channel, all
 
 Follow these steps to set up the project locally:
 
+### Windows
+
 1. Clone the repository: `git clone https://github.com/isayahc/Semi-Automated-Youtube-Channel.git`
 2. create a virtual environemnt:
    1. `python -m venv venv`
    2. `activate`
-3. Install the required dependencies: `pip3 install -r requirements.txt` for linux `pip install -r requirements.txt` for windows
+3. Install the required dependencies: `pip install -r requirements.txt`
+4. Configure the API keys and authentication credentials in the example.env file
+
+### Linux / OSX
+
+1. Clone the repository: `git clone https://github.com/isayahc/Semi-Automated-Youtube-Channel.git`
+2. create a virtual environemnt:
+   1. `python3 -m venv venv`
+   2. `source venv/bin/activate`
+3. Install the required dependencies: `pip3 install -r requirements.txt`
 4. Configure the API keys and authentication credentials in the example.env file
 
 ## System Requirements
