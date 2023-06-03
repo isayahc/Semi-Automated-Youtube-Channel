@@ -3,13 +3,23 @@ import urllib.request
 import re
 import requests
 from dotenv import load_dotenv
+from typing import Union, List
 
-def get_unique_video_ids(search_query):
+def get_unique_video_ids(search_query: str) -> List[str]:
+    """
+    Get the unique video IDs from YouTube search results.
+
+    Args:
+        search_query (str): The search query to use on YouTube.
+
+    Returns:
+        List[str]: A list of unique video IDs from the search results.
+    """
     # Replace white spaces with a "+" symbol
     search_query = search_query.replace(" ", "+")
     
     # Create a URL to search on YouTube using the search query
-    url = f"https://www.youtube.com/results?search_query={search_query}&sp=CAMSBAgEEAE%253D"
+    url = f"https://www.youtub.com/results?search_query={search_query}&sp=CAMSBAgEEAE%253D"
     
     # Open the URL and read the HTML response
     with urllib.request.urlopen(url) as html:
@@ -22,7 +32,18 @@ def get_unique_video_ids(search_query):
     unique_video_ids = list(set(video_ids))
     return unique_video_ids
 
-def get_video_views(video_id, api_key):
+
+def get_video_views(video_id: str, api_key: str) -> Union[str, None]:
+    """
+    Get the view count for a specific YouTube video.
+
+    Args:
+        video_id (str): The ID of the YouTube video.
+        api_key (str): The Google API key.
+
+    Returns:
+        Union[str, None]: The view count for the video as a string, or None if an error occurred.
+    """
     # Construct the API URL
     url = f'https://www.googleapis.com/youtube/v3/videos?part=statistics&id={video_id}&key={api_key}'
 
@@ -42,6 +63,7 @@ def get_video_views(video_id, api_key):
     else:
         # If the request was not successful, raise an exception
         raise Exception(f'Error retrieving video data: {response.text}')
+
 
 def main():
     # Load environment variables from .env file
