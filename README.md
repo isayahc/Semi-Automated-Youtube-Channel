@@ -37,6 +37,50 @@ Follow these steps to set up the project locally:
 3. Install the required dependencies: `pip3 install -r requirements.txt`
 4. Configure the API keys and authentication credentials in the example.env file
 
+## API Keys
+
+```python
+# Optional and may be removed soon
+PROJECT_CX=
+
+# Needed for working with google
+GOOGLE_API_KEY=
+
+# Needed for text-to-speech
+ELEVENLABS_API_KEY=
+
+# Configuration for storing assets
+STRING_AUDIO_FILE_LOCATION=assets/audio/posts
+SWEAR_WORD_LIST_FILE_LOCATION_FILE_LOCATION=assets/text/swear_words.csv
+
+# Optional if you want to use reddit
+REDDIT_CLIENT_ID=
+REDDIT_CLIENT_SECRET=
+
+
+# Optional PLAYHT will probably be removed soon
+PLAYHT_API_KEY=
+PLAYHT_API_USER_ID=
+
+
+```
+
+### Configure Reddit
+
+- [Follow this link](https://www.reddit.com/wiki/api/)
+
+### Configure ElevenLabs
+
+- [Follow this link](https://docs.elevenlabs.io/api-reference/quick-start/authentication)
+
+### Configure Youtube Data v3
+
+- [Follow this link](https://developers.google.com/youtube/v3/getting-started)
+
+### Getting client_secret.json
+
+- [Instructions here](https://developers.google.com/youtube/v3/docs/videos/insert)
+
 ## System Requirements
 
 ### Python Version
@@ -89,7 +133,7 @@ This `video_upload.py` script provides a command-line interface (CLI) tool to up
 
 Before you use this script, ensure that you have the following:
 
-1. **OAuth 2.0 client ID and client secret:** You need to specify a `client_secret.json` file with your OAuth 2.0 client ID and client secret. You can get these from the Google Cloud Console. Ensure that you have enabled the YouTube Data API for your project.
+1. **OAuth 2.0 client ID and client secret:** You need to specify a `client_secret.json` file with your OAuth 2.0 client ID and client secret. You can get these from the Google Cloud Console. Ensure that you have enabled the YouTube Data API for your project. More Information in the [Documentation](https://developers.google.com/youtube/v3/docs/videos/insert)
 
 ### Running video_upload.py
 
