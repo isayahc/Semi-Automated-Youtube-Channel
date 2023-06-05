@@ -3,7 +3,7 @@ import argparse
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
 
-def get_video_engagement_metrics(video_id: str, api_key: str):
+def get_video_engagement_metrics(video_id: str, api_key: str) -> dict:
     """
     Fetch engagement metrics for a specific YouTube video.
 
@@ -12,23 +12,28 @@ def get_video_engagement_metrics(video_id: str, api_key: str):
         api_key (str): The Google API key.
 
     Returns:
-        dict: A dictionary containing engagement metrics.
+        dict: A dictionary containing engagement metrics and video metadata.
     """
     # Build the YouTube API client
     youtube = build('youtube', 'v3', developerKey=api_key)
 
-    # Make the API request to get video statistics
+    # Make the API request to get video statistics and snippet (for metadata)
     response = youtube.videos().list(
-        part='statistics',
+        part='statistics,snippet',
         id=video_id
     ).execute()
 
-    # Extract engagement metrics from the response
+    # Extract engagement metrics and metadata from the response
     engagement_metrics = response['items'][0]['statistics']
+    metadata = response['items'][0]['snippet']
+
+    # Add metadata to the engagement metrics dictionary
+    engagement_metrics.update(metadata)
 
     return engagement_metrics
 
-def get_video_comments(video_id: str, api_key: str, max_results: int = 20, include_replies: bool = True, order: str = 'relevance') -> list:
+
+def get_video_comments(video_id: str, api_key: str, max_results: int = 20, include_replies: bool = True) -> list:
     """
     Fetch comments for a specific YouTube video.
 
@@ -37,35 +42,52 @@ def get_video_comments(video_id: str, api_key: str, max_results: int = 20, inclu
         api_key (str): The Google API key.
         max_results (int, optional): Maximum number of comments to return. Defaults to 20.
         include_replies (bool, optional): If True, includes replies to comments. Defaults to True.
-        order (str, optional): The order in which to retrieve comments.
-            Possible values: 'relevance', 'time', 'rating', 'videoLikes', 'videoRelevance'.
-            Defaults to 'relevance'.
 
     Returns:
-        list: A list containing comments, booleans indicating if it is a reply, and the comment's publish datetime.
+        list: A list containing comments, booleans indicating if it is a reply, the comment's publish datetime, 
+              like count, and author channel Id.
     """
     # Build the YouTube API client
     youtube = build('youtube', 'v3', developerKey=api_key)
 
-    # Fetch comments for the video with the specified order
+    # Fetch comments for the video
     response = youtube.commentThreads().list(
         part='snippet,replies',
         videoId=video_id,
         textFormat='plainText',
-        maxResults=max_results,
-        order=order
+        maxResults=max_results
     ).execute()
 
     # Extract comments from the response
     comments = []
     for item in response['items']:
         comment = item['snippet']['topLevelComment']['snippet']
-        comments.append((comment['textDisplay'], False, comment['publishedAt']))  # It's not a reply
+        comments.append(
+            {
+                'text': comment['textDisplay'],
+                'is_reply': False,
+                'like_count': comment['likeCount'],
+                'author_channel_id': comment['authorChannelId']['value'],
+                'publish_time': comment['publishedAt']
+            }
+        )
+
+        # Extract replies if any
         if include_replies and 'replies' in item:
             for reply in item['replies']['comments']:
-                comments.append((reply['snippet']['textDisplay'], True, reply['snippet']['publishedAt']))  # It's a reply
-        
+                reply_comment = reply['snippet']
+                comments.append(
+                    {
+                        'text': reply_comment['textDisplay'],
+                        'is_reply': True,
+                        'like_count': reply_comment['likeCount'],
+                        'author_channel_id': reply_comment['authorChannelId']['value'],
+                        'publish_time': reply_comment['publishedAt']
+                    }
+                )
+
     return comments
+
 
 def main():
     # Load environment variables

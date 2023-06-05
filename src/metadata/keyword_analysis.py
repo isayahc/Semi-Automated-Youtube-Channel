@@ -23,27 +23,28 @@ def validate_inputs(keywords: List[str], timeframe: str) -> None:
     if timeframe not in valid_timeframes:
         raise ValueError("Invalid timeframe. Check the Google Trends API for valid timeframes.")
 
+
 def get_trends(keywords: List[str], timeframe: str = 'today 5-y') -> pd.DataFrame:
     """
     Get Google Trends data for a list of keywords.
 
-    Parameters
-    ----------
-    keywords : list of str
-        List of keywords to get trends data for.
-    timeframe : str, optional
-        Timeframe for the trends data, defaults to 'today 5-y'.
+    Args:
+        keywords (List[str]): List of keywords to get trends data for.
+        timeframe (str, optional): Timeframe for the trends data, defaults to 'today 5-y'.
 
-    Returns
-    -------
-    pandas.DataFrame
-        DataFrame with the trends data.
+    Returns:
+        pd.DataFrame: DataFrame with the trends data.
     """
-    validate_inputs(keywords, timeframe)
     pytrends = TrendReq(hl='en-US', tz=360)
-    pytrends.build_payload(keywords, cat=0, timeframe=timeframe, geo='', gprop='')
-    trend_data = pytrends.interest_over_time()
-    return trend_data
+
+    # Build the payload
+    pytrends.build_payload(keywords, timeframe=timeframe)
+
+    # Get Google Trends data
+    trends_data = pytrends.interest_over_time()
+
+    return trends_data
+
 
 def plot_trends(trend_data: pd.DataFrame, save: bool = False, filename: Optional[str] = None) -> None:
     """
