@@ -24,7 +24,7 @@ def validate_inputs(keywords: List[str], timeframe: str) -> None:
         raise ValueError("Invalid timeframe. Check the Google Trends API for valid timeframes.")
 
 
-def get_trends(keywords: List[str], timeframe: str = 'today 5-y') -> pd.DataFrame:
+def get_trends(keywords: List[str], timeframe: str = 'today 5-y', filter_isPartial: bool = True) -> pd.DataFrame:
     pytrends = TrendReq(hl='en-US', tz=360)
     trend_dfs = []
 
@@ -36,6 +36,15 @@ def get_trends(keywords: List[str], timeframe: str = 'today 5-y') -> pd.DataFram
             # Get Google Trends data
             trends_data = pytrends.interest_over_time()
 
+            if filter_isPartial:
+                # Keep only the rows where isPartial is False
+                trends_data = trends_data[trends_data['isPartial'] == False]
+
+            # Rename columns to make them unique
+            for keyword in keywords[i:i+5]:
+                if keyword in trends_data.columns:
+                    trends_data.rename(columns={keyword: f"{keyword}_{i}"}, inplace=True)
+
             # Append to list of dataframes
             trend_dfs.append(trends_data)
 
@@ -43,7 +52,10 @@ def get_trends(keywords: List[str], timeframe: str = 'today 5-y') -> pd.DataFram
         print(f"An error occurred: {e}")
 
     # Concatenate all dataframes
+
     final_df = pd.concat(trend_dfs, axis=1)
+    final_df.drop(['isPartial'], axis=1, inplace=True)
+
 
     return final_df
 
