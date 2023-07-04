@@ -2,6 +2,28 @@ import argparse
 from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api.formatters import SRTFormatter
 import os
+import pysrt
+import chardet
+
+
+def get_encoding_type(srt_file):
+    rawdata = open(srt_file, 'rb').read()
+    result = chardet.detect(rawdata)
+    return result['encoding']
+
+def srt_to_dict(srt_file):
+    encoding = get_encoding_type(srt_file)
+    subs = pysrt.open(srt_file, encoding=encoding)
+
+    list_dict = []
+    for sub in subs:
+        list_dict.append({
+            'start_seconds': sub.start.ordinal / 1000.0,
+            'end_seconds': sub.end.ordinal / 1000.0,
+            'text': sub.text
+        })
+
+    return list_dict
 
 def main():
     parser = argparse.ArgumentParser(description='Check if the transcript of a YouTube video is auto-generated or user-generated')
