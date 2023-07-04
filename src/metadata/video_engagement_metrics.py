@@ -3,91 +3,59 @@ import argparse
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
 
-def get_video_engagement_metrics(video_id: str, api_key: str) -> dict:
-    """
-    Fetch engagement metrics for a specific YouTube video.
 
-    Args:
-        video_id (str): The ID of the YouTube video.
-        api_key (str): The Google API key.
+class YouTubeMetrics:
+    def __init__(self, api_key):
+        self.youtube = build('youtube', 'v3', developerKey=api_key)
 
-    Returns:
-        dict: A dictionary containing engagement metrics and video metadata.
-    """
-    # Build the YouTube API client
-    youtube = build('youtube', 'v3', developerKey=api_key)
+    def get_video_engagement_metrics(self, video_id):
+        response = self.youtube.videos().list(
+            part='statistics,snippet',
+            id=video_id
+        ).execute()
 
-    # Make the API request to get video statistics and snippet (for metadata)
-    response = youtube.videos().list(
-        part='statistics,snippet',
-        id=video_id
-    ).execute()
+        engagement_metrics = response['items'][0]['statistics']
+        metadata = response['items'][0]['snippet']
 
-    # Extract engagement metrics and metadata from the response
-    engagement_metrics = response['items'][0]['statistics']
-    metadata = response['items'][0]['snippet']
+        engagement_metrics.update(metadata)
 
-    # Add metadata to the engagement metrics dictionary
-    engagement_metrics.update(metadata)
+        return engagement_metrics
 
-    return engagement_metrics
+    def get_video_comments(self, video_id, max_results=20, include_replies=True):
+        response = self.youtube.commentThreads().list(
+            part='snippet,replies',
+            videoId=video_id,
+            textFormat='plainText',
+            maxResults=max_results
+        ).execute()
 
+        comments = []
+        for item in response['items']:
+            comment = item['snippet']['topLevelComment']['snippet']
+            comments.append(
+                {
+                    'text': comment['textDisplay'],
+                    'is_reply': False,
+                    'like_count': comment['likeCount'],
+                    'author_channel_id': comment['authorChannelId']['value'],
+                    'publish_time': comment['publishedAt']
+                }
+            )
 
-def get_video_comments(video_id: str, api_key: str, max_results: int = 20, include_replies: bool = True) -> list:
-    """
-    Fetch comments for a specific YouTube video.
+            if include_replies and 'replies' in item:
+                for reply in item['replies']['comments']:
+                    reply_comment = reply['snippet']
+                    comments.append(
+                        {
+                            'text': reply_comment['textDisplay'],
+                            'is_reply': True,
+                            'like_count': reply_comment['likeCount'],
+                            'author_channel_id': reply_comment['authorChannelId']['value'],
+                            'publish_time': reply_comment['publishedAt']
+                        }
+                    )
 
-    Args:
-        video_id (str): The ID of the YouTube video.
-        api_key (str): The Google API key.
-        max_results (int, optional): Maximum number of comments to return. Defaults to 20.
-        include_replies (bool, optional): If True, includes replies to comments. Defaults to True.
-
-    Returns:
-        list: A list containing comments, booleans indicating if it is a reply, the comment's publish datetime, 
-              like count, and author channel Id.
-    """
-    # Build the YouTube API client
-    youtube = build('youtube', 'v3', developerKey=api_key)
-
-    # Fetch comments for the video
-    response = youtube.commentThreads().list(
-        part='snippet,replies',
-        videoId=video_id,
-        textFormat='plainText',
-        maxResults=max_results
-    ).execute()
-
-    # Extract comments from the response
-    comments = []
-    for item in response['items']:
-        comment = item['snippet']['topLevelComment']['snippet']
-        comments.append(
-            {
-                'text': comment['textDisplay'],
-                'is_reply': False,
-                'like_count': comment['likeCount'],
-                'author_channel_id': comment['authorChannelId']['value'],
-                'publish_time': comment['publishedAt']
-            }
-        )
-
-        # Extract replies if any
-        if include_replies and 'replies' in item:
-            for reply in item['replies']['comments']:
-                reply_comment = reply['snippet']
-                comments.append(
-                    {
-                        'text': reply_comment['textDisplay'],
-                        'is_reply': True,
-                        'like_count': reply_comment['likeCount'],
-                        'author_channel_id': reply_comment['authorChannelId']['value'],
-                        'publish_time': reply_comment['publishedAt']
-                    }
-                )
-
-    return comments
-
+        return comments
 
 def main():
     # Load environment variables
