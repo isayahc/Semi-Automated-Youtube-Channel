@@ -25,25 +25,27 @@ def validate_inputs(keywords: List[str], timeframe: str) -> None:
 
 
 def get_trends(keywords: List[str], timeframe: str = 'today 5-y') -> pd.DataFrame:
-    """
-    Get Google Trends data for a list of keywords.
-
-    Args:
-        keywords (List[str]): List of keywords to get trends data for.
-        timeframe (str, optional): Timeframe for the trends data, defaults to 'today 5-y'.
-
-    Returns:
-        pd.DataFrame: DataFrame with the trends data.
-    """
     pytrends = TrendReq(hl='en-US', tz=360)
+    trend_dfs = []
 
-    # Build the payload
-    pytrends.build_payload(keywords, timeframe=timeframe)
+    try:
+        for i in range(0, len(keywords), 5):
+            # Build the payload
+            pytrends.build_payload(keywords[i:i+5], timeframe=timeframe)
 
-    # Get Google Trends data
-    trends_data = pytrends.interest_over_time()
+            # Get Google Trends data
+            trends_data = pytrends.interest_over_time()
 
-    return trends_data
+            # Append to list of dataframes
+            trend_dfs.append(trends_data)
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+    # Concatenate all dataframes
+    final_df = pd.concat(trend_dfs, axis=1)
+
+    return final_df
 
 
 def plot_trends(trend_data: pd.DataFrame, save: bool = False, filename: Optional[str] = None) -> None:
