@@ -13,7 +13,8 @@ sample = r".\not_for_github\Af3ZG47oT7I_en.srt"
 
 
 # youtube_url = "https://www.youtube.com/watch?v=Af3ZG47oT7I"
-
+vid_id = "Af3ZG47oT7I"
+vid_id  = "rn8oef21Igg"
 
 jj = get_transcripts.srt_to_dict(sample)
 # x = get_youtube_video_tags.get_video_tags(youtube_url)
@@ -25,8 +26,8 @@ api_key = os.getenv("GOOGLE_API_KEY")
 
 kk = video_engagement_metrics.YouTubeMetrics(api_key=api_key)
 
-mm = kk.get_video_engagement_metrics("Af3ZG47oT7I")
-mm = kk.get_video_comments("Af3ZG47oT7I")
+# mm = kk.get_video_engagement_metrics(vid_id)
+mm = kk.get_video_comments(vid_id,50)
 
 f=0
 

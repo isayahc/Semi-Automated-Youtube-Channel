@@ -24,6 +24,22 @@ def validate_inputs(keywords: List[str], timeframe: str) -> None:
         raise ValueError("Invalid timeframe. Check the Google Trends API for valid timeframes.")
 
 
+def generate_payload(keywords: List[str], timeframe: str = 'today 5-y', filter_isPartial: bool = True) -> pd.DataFrame:
+    pytrends = TrendReq(hl='en-US', tz=360)
+
+    try:
+        for i in range(0, len(keywords), 5):
+            # Build the payload
+            pytrends.build_payload(keywords[i:i+5], timeframe=timeframe)
+
+            
+    
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+    return pytrends
+
+
 def get_trends(keywords: List[str], timeframe: str = 'today 5-y', filter_isPartial: bool = True) -> pd.DataFrame:
     pytrends = TrendReq(hl='en-US', tz=360)
     trend_dfs = []
@@ -43,7 +59,7 @@ def get_trends(keywords: List[str], timeframe: str = 'today 5-y', filter_isParti
             # Rename columns to make them unique
             for keyword in keywords[i:i+5]:
                 if keyword in trends_data.columns:
-                    trends_data.rename(columns={keyword: f"{keyword}_{i}"}, inplace=True)
+                    trends_data.rename(columns={keyword: f"{keyword}"}, inplace=True)
 
             # Append to list of dataframes
             trend_dfs.append(trends_data)
