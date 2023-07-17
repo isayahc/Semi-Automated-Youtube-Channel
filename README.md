@@ -67,7 +67,7 @@ PROJECT_CX=
 ### Configure Reddit
 
 - [login here](https://www.reddit.com/prefs/apps) tomake a new app
-![Alt Text]([Image URL](https://github.com/isayahc/Semi-Automated-Youtube-Channel/blob/main/readme_assets/reddit_api_example.PNG?raw=true))
+![Alt Text]([Image URL](https://github.com/isayahc/Semi-Automated-Youtube-Channel/blob/main/readme_assets/reddit_api_example.png?raw=true))
 
 ### Configure ElevenLabs
 
