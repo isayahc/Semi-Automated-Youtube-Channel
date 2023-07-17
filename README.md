@@ -68,9 +68,9 @@ PROJECT_CX=
 
 - [login here](https://www.reddit.com/prefs/apps) tomake a new app
 
-![Alt Text] ([Image URL](https://github.com/isayahc/Semi-Automated-Youtube-Channel/blob/main/readme_assets/reddit_api_example.png?raw=true))
+This is a sample of what to input
+![ Image](https://github.com/isayahc/Semi-Automated-Youtube-Channel/blob/main/readme_assets/reddit_api_example.PNG?raw=true)
 
-![ Image](https://github.com/isayahc/Semi-Automated-Youtube-Channel/blob/main/readme_assets/reddit_api_example.png?raw=true)
 ### Configure ElevenLabs
 
 - [Follow this link](https://docs.elevenlabs.io/api-reference/quick-start/authentication)
